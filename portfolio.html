@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My App Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .gradient-text {
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-image: linear-gradient(to right, #2563eb, #9333ea);
+        }
+        /* モーダルアニメーション */
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+        body.modal-active {
+            overflow: hidden; /* 背景スクロール防止 */
+        }
+        /* フィルターボタンのアクティブスタイル */
+        .filter-btn.active {
+            background-color: #1f2937; /* gray-800 */
+            color: white;
+            border-color: #1f2937;
+        }
+        /* テキストの改行制御 */
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col relative">
+
+    <header class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-layer-group text-blue-600 text-xl"></i>
+                <h1 class="text-xl font-bold tracking-tight text-gray-900">My Portfolio</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <button id="resetButton" class="text-xs text-gray-400 hover:text-blue-500 underline transition-colors">
+                    サンプル追加
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+        
+        <div class="text-center mb-8">
+            <h2 class="text-4xl font-extrabold mb-4">
+                <span class="gradient-text">Apps & Projects</span>
+            </h2>
+            <p class="text-gray-600 text-lg max-w-2xl mx-auto">
+                これまでに作成したアプリケーションのコレクションです。
+            </p>
+        </div>
+
+        <div class="max-w-4xl mx-auto mb-10 space-y-6">
+            
+            <div class="relative max-w-md mx-auto">
+                <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                <input type="text" id="searchInput" placeholder="アプリを検索..." 
+                    class="w-full pl-10 pr-4 py-3 rounded-full border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition shadow-sm bg-white">
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-2" id="filterContainer">
+                <button data-filter="All" class="filter-btn active px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">すべて</button>
+                <button data-filter="Tool" class="filter-btn px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">Tool</button>
+                <button data-filter="Game" class="filter-btn px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">Game</button>
+                <button data-filter="Web" class="filter-btn px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">Web</button>
+                <button data-filter="Design" class="filter-btn px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">Design</button>
+                <button data-filter="Other" class="filter-btn px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">Other</button>
+            </div>
+        </div>
+
+        <div id="appGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+
+        <div id="noResults" class="hidden text-center py-12 text-gray-500">
+            <i class="fa-regular fa-face-frown text-4xl mb-3"></i>
+            <p class="mt-2">見つかりませんでした</p>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="max-w-6xl mx-auto px-4 py-8 text-center text-gray-500 text-sm">
+            &copy; 2024 My Portfolio. All rights reserved.
+        </div>
+    </footer>
+
+    <button id="addAppBtn" class="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-2xl transition transform hover:scale-110 z-50 focus:outline-none focus:ring-4 focus:ring-blue-300" title="新しいアプリを追加" aria-label="新しいアプリを追加">
+        <i class="fa-solid fa-plus"></i>
+    </button>
+
+    <div id="modal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50" aria-hidden="true" role="dialog" aria-labelledby="modalTitle">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50 backdrop-blur-sm"></div>
+        
+        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-xl shadow-2xl z-50 overflow-y-auto max-h-[90vh] transform transition-transform scale-95">
+            
+            <div class="modal-content py-4 text-left px-6">
+                <div class="flex justify-between items-center pb-3 border-b border-gray-100">
+                    <p id="modalTitle" class="text-2xl font-bold text-gray-800">アプリを追加</p>
+                    <button class="modal-close cursor-pointer z-50 text-gray-500 hover:text-gray-800 p-2 focus:outline-none focus:ring-2 focus:ring-gray-300 rounded" aria-label="閉じる">
+                        <i class="fa-solid fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <div class="my-5 space-y-4">
+                    <input type="hidden" id="editAppId">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="appName">アプリ名 <span class="text-red-500">*</span></label>
+                        <input class="shadow-sm appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" id="appName" type="text" placeholder="例: Todoリスト">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="appUrl">URL <span class="text-red-500">*</span> <span class="text-xs text-gray-400 font-normal">(http/https)</span></label>
+                        <input class="shadow-sm appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" id="appUrl" type="url" placeholder="https://example.com">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="appDesc">説明</label>
+                        <textarea class="shadow-sm appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" id="appDesc" rows="3" placeholder="簡単な説明を入力"></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">カテゴリ</label>
+                            <select id="appCategory" class="shadow-sm border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white">
+                                <option value="Tool">Tool</option>
+                                <option value="Game">Game</option>
+                                <option value="Web">Web</option>
+                                <option value="Design">Design</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">アイコン</label>
+                            <select id="appIcon" class="shadow-sm border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white">
+                                <option value="fa-cube">Cube (基本)</option>
+                                <option value="fa-check-circle">Check (Todo)</option>
+                                <option value="fa-gamepad">Gamepad (ゲーム)</option>
+                                <option value="fa-calculator">Calc (計算機)</option>
+                                <option value="fa-image">Image (画像)</option>
+                                <option value="fa-code">Code (開発)</option>
+                                <option value="fa-cloud-sun">Weather (天気)</option>
+                                <option value="fa-music">Music (音楽)</option>
+                                <option value="fa-book">Book (本)</option>
+                                <option value="fa-pen-nib">Pen (ブログ)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">テーマカラー</label>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" data-color="bg-blue-500" class="color-btn w-8 h-8 rounded-full bg-blue-500 ring-2 ring-offset-2 ring-blue-500 focus:outline-none hover:opacity-80 transition" aria-label="Blue"></button>
+                            <button type="button" data-color="bg-purple-500" class="color-btn w-8 h-8 rounded-full bg-purple-500 focus:outline-none hover:opacity-80 transition" aria-label="Purple"></button>
+                            <button type="button" data-color="bg-emerald-500" class="color-btn w-8 h-8 rounded-full bg-emerald-500 focus:outline-none hover:opacity-80 transition" aria-label="Emerald"></button>
+                            <button type="button" data-color="bg-orange-400" class="color-btn w-8 h-8 rounded-full bg-orange-400 focus:outline-none hover:opacity-80 transition" aria-label="Orange"></button>
+                            <button type="button" data-color="bg-rose-500" class="color-btn w-8 h-8 rounded-full bg-rose-500 focus:outline-none hover:opacity-80 transition" aria-label="Rose"></button>
+                            <button type="button" data-color="bg-gray-700" class="color-btn w-8 h-8 rounded-full bg-gray-700 focus:outline-none hover:opacity-80 transition" aria-label="Gray"></button>
+                        </div>
+                        <input type="hidden" id="appColor" value="bg-blue-500">
+                    </div>
+
+                </div>
+
+                <div class="flex justify-end pt-2 gap-2">
+                    <button id="cancelBtn" class="px-4 py-2 bg-gray-100 p-3 rounded-lg text-gray-700 hover:bg-gray-200 font-medium transition focus:outline-none focus:ring-2 focus:ring-gray-300">キャンセル</button>
+                    <button id="saveBtn" class="px-4 py-2 bg-blue-600 rounded-lg text-white hover:bg-blue-700 font-medium shadow-md transition transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500">保存する</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // ブラウザで直接動くようにCDN形式のURLにしています
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp } 
+            from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // --------------------------------------------------------
+        // ★新しいプロジェクトの鍵 (helpful-passage-430405-b3)
+        // --------------------------------------------------------
+        const firebaseConfig = {
+            apiKey: "AIzaSyAJT9HWvbxj2sT7WDgrzzAMhe0cLxzmSfI",
+            authDomain: "helpful-passage-430405-b3.firebaseapp.com",
+            projectId: "helpful-passage-430405-b3",
+            storageBucket: "helpful-passage-430405-b3.firebasestorage.app",
+            messagingSenderId: "915619375587",
+            appId: "1:915619375587:web:daacf02ecbb879ba5118d6",
+            measurementId: "G-RJ36V69VTQ"
+        };
+
+        // 初期化
+        const app = initializeApp(firebaseConfig);
+        
+        // ★重要: ここで "(default)" ではなく "portfolio" データベースを使うよう指定しています
+        const db = getFirestore(app, "portfolio");
+        
+        const APPS_COLLECTION = "portfolio_apps"; 
+
+        // --------------------------------------------------------
+        // アプリケーション状態 & UI要素
+        // --------------------------------------------------------
+        let state = {
+            apps: [],
+            filter: 'All',
+            searchQuery: ''
+        };
+
+        const grid = document.getElementById('appGrid');
+        const noResults = document.getElementById('noResults');
+        const loadingMsg = document.createElement('div');
+        loadingMsg.className = "col-span-full text-center py-10 text-gray-500";
+        loadingMsg.textContent = "データを読み込み中...";
+
+        // --------------------------------------------------------
+        // Firestoreとのリアルタイム同期
+        // --------------------------------------------------------
+        function initFirestoreListener() {
+            grid.appendChild(loadingMsg);
+
+            onSnapshot(collection(db, APPS_COLLECTION), (snapshot) => {
+                state.apps = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                
+                renderApps();
+                
+                if(loadingMsg.parentNode) loadingMsg.parentNode.removeChild(loadingMsg);
+            });
+        }
+
+        // --------------------------------------------------------
+        // データ保存 (追加・更新)
+        // --------------------------------------------------------
+        async function saveToFirestore(appData, editId = null) {
+            try {
+                const payload = {
+                    ...appData,
+                    updatedAt: serverTimestamp()
+                };
+
+                if (editId) {
+                    const appRef = doc(db, APPS_COLLECTION, editId);
+                    await updateDoc(appRef, payload);
+                } else {
+                    await addDoc(collection(db, APPS_COLLECTION), payload);
+                }
+                closeModal();
+            } catch (error) {
+                console.error("Error saving:", error);
+                alert("保存に失敗しました: " + error.message);
+            }
+        }
+
+        // --------------------------------------------------------
+        // データ削除
+        // --------------------------------------------------------
+        async function deleteFromFirestore(id) {
+            if(confirm('このアプリを削除しますか？\n(クラウド上のデータも削除されます)')) {
+                try {
+                    await deleteDoc(doc(db, APPS_COLLECTION, id));
+                } catch (error) {
+                    console.error("Error removing:", error);
+                    alert("削除に失敗しました");
+                }
+            }
+        }
+
+        // --------------------------------------------------------
+        // サンプルデータ追加 (管理者用機能)
+        // --------------------------------------------------------
+        async function addSampleData() {
+            if(!confirm('サンプルデータをデータベースに追加しますか？')) return;
+            
+            const samples = [
+                { name: "サンプル Todoリスト", url: "#", description: "シンプルで使いやすいタスク管理ツールです。", category: "Tool", icon: "fa-check-circle", color: "bg-blue-500" },
+                { name: "ブロック崩しゲーム", url: "#", description: "懐かしのレトロゲーム。", category: "Game", icon: "fa-gamepad", color: "bg-purple-500" },
+                { name: "天気予報ビューアー", url: "#", description: "現在地と世界中の天気をリアルタイムで確認。", category: "Tool", icon: "fa-cloud-sun", color: "bg-orange-400" }
+            ];
+
+            for (const s of samples) {
+                await addDoc(collection(db, APPS_COLLECTION), s);
+            }
+        }
+
+        document.getElementById('resetButton').onclick = addSampleData;
+
+        // ========================================================
+        //  UIロジック (レンダリング・モーダルなど)
+        // ========================================================
+
+        function normalizeUrl(input) {
+            try {
+                const u = new URL(input);
+                if (!['http:', 'https:'].includes(u.protocol)) return null;
+                return u.toString();
+            } catch {
+                return null;
+            }
+        }
+
+        function renderApps() {
+            grid.innerHTML = '';
+            
+            const searchText = state.searchQuery.toLowerCase();
+            const currentFilter = state.filter;
+
+            const filteredApps = state.apps.filter(app => {
+                const matchesText = (app.name + (app.description||"") + app.category).toLowerCase().includes(searchText);
+                const matchesCategory = currentFilter === 'All' || app.category === currentFilter;
+                return matchesText && matchesCategory;
+            });
+
+            if (filteredApps.length === 0) {
+                noResults.classList.remove('hidden');
+            } else {
+                noResults.classList.add('hidden');
+            }
+
+            filteredApps.forEach(app => {
+                const cardWrapper = document.createElement('div');
+                cardWrapper.className = "relative group h-full";
+
+                const link = document.createElement('a');
+                link.href = app.url;
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+                link.className = "app-card flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 p-6 card-hover h-full relative overflow-hidden z-10 hover:border-blue-200 transition-colors";
+
+                const headerDiv = document.createElement('div');
+                headerDiv.className = "flex items-start justify-between mb-4";
+                
+                const iconDiv = document.createElement('div');
+                const colorClass = app.color || 'bg-blue-500';
+                iconDiv.className = `w-12 h-12 rounded-lg ${colorClass} text-white flex items-center justify-center text-2xl shadow-md transition-transform group-hover:scale-110 shrink-0`;
+                iconDiv.innerHTML = `<i class="fa-solid ${app.icon || 'fa-cube'}"></i>`;
+                
+                const catSpan = document.createElement('span');
+                catSpan.className = "text-xs font-semibold px-2 py-1 bg-gray-100 text-gray-600 rounded-full shrink-0";
+                catSpan.textContent = app.category;
+
+                headerDiv.append(iconDiv, catSpan);
+
+                const title = document.createElement('h3');
+                title.className = "text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors mb-2 pr-12 break-words";
+                title.textContent = app.name;
+
+                const desc = document.createElement('p');
+                desc.className = "text-sm text-gray-500 leading-relaxed mb-8 flex-grow line-clamp-3";
+                desc.textContent = app.description;
+
+                const openDiv = document.createElement('div');
+                openDiv.className = "flex items-center text-blue-600 text-sm font-bold absolute bottom-6 right-6 transition-transform group-hover:translate-x-1";
+                openDiv.innerHTML = 'Open <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i>';
+
+                link.append(headerDiv, title, desc, openDiv);
+
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = "absolute top-2 right-2 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200";
+
+                const createBtn = (icon, title, colorClass, handler) => {
+                    const btn = document.createElement('button');
+                    btn.className = `w-8 h-8 bg-white text-gray-500 rounded-full hover:${colorClass} flex items-center justify-center shadow-sm border border-gray-200 transition-colors`;
+                    btn.title = title;
+                    btn.innerHTML = `<i class="fa-solid ${icon} text-xs"></i>`;
+                    btn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); handler(); };
+                    return btn;
+                };
+
+                actionsDiv.appendChild(createBtn('fa-pen', '編集', 'bg-blue-50 hover:text-blue-600', () => openModal(app.id)));
+                actionsDiv.appendChild(createBtn('fa-trash-can', '削除', 'bg-red-50 hover:text-red-500', () => deleteFromFirestore(app.id)));
+
+                cardWrapper.append(link, actionsDiv);
+                grid.appendChild(cardWrapper);
+            });
+        }
+
+        // イベントリスナー
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            state.searchQuery = e.target.value;
+            renderApps();
+        });
+
+        document.getElementById('filterContainer').addEventListener('click', (e) => {
+            if (e.target.classList.contains('filter-btn')) {
+                const category = e.target.dataset.filter;
+                state.filter = category;
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    if(btn.dataset.filter === category) {
+                        btn.classList.add('active', 'bg-gray-800', 'text-white', 'border-gray-800');
+                        btn.classList.remove('bg-white', 'text-gray-600');
+                    } else {
+                        btn.classList.remove('active', 'bg-gray-800', 'text-white', 'border-gray-800');
+                        btn.classList.add('bg-white', 'text-gray-600');
+                    }
+                });
+                renderApps();
+            }
+        });
+
+        document.getElementById('addAppBtn').addEventListener('click', () => openModal());
+
+        // モーダル関連
+        const modal = document.getElementById('modal');
+        const modalContainer = modal.querySelector('.modal-container');
+        const modalTitle = document.getElementById('modalTitle');
+        const editAppIdInput = document.getElementById('editAppId');
+        
+        const appNameInput = document.getElementById('appName');
+        const appUrlInput = document.getElementById('appUrl');
+        const appDescInput = document.getElementById('appDesc');
+        const appCategoryInput = document.getElementById('appCategory');
+        const appIconInput = document.getElementById('appIcon');
+        const appColorInput = document.getElementById('appColor');
+
+        function openModal(editId = null) {
+            document.body.classList.add('modal-active');
+            if (editId) {
+                const app = state.apps.find(a => a.id === editId);
+                if (!app) return;
+                modalTitle.textContent = "アプリを編集";
+                editAppIdInput.value = editId;
+                appNameInput.value = app.name;
+                appUrlInput.value = app.url;
+                appDescInput.value = app.description;
+                appCategoryInput.value = app.category;
+                appIconInput.value = app.icon;
+                selectColor(app.color);
+            } else {
+                modalTitle.textContent = "アプリを追加";
+                editAppIdInput.value = "";
+                appNameInput.value = "";
+                appUrlInput.value = "";
+                appDescInput.value = "";
+                appCategoryInput.value = "Tool";
+                appIconInput.value = "fa-cube";
+                selectColor("bg-blue-500");
+            }
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.setAttribute('aria-hidden', 'false');
+            setTimeout(() => {
+                modalContainer.classList.remove('scale-95');
+                modalContainer.classList.add('scale-100');
+                appNameInput.focus();
+            }, 10);
+        }
+
+        function closeModal() {
+            modalContainer.classList.remove('scale-100');
+            modalContainer.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                modal.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('modal-active');
+            }, 150);
+        }
+
+        document.querySelector('.modal-close').addEventListener('click', closeModal);
+        document.querySelector('.modal-overlay').addEventListener('click', closeModal);
+        document.getElementById('cancelBtn').addEventListener('click', closeModal);
+
+        const colorBtns = document.querySelectorAll('.color-btn');
+        colorBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => selectColor(e.target.dataset.color));
+        });
+
+        function selectColor(colorClass) {
+            appColorInput.value = colorClass;
+            colorBtns.forEach(btn => {
+                btn.classList.remove('ring-2', 'ring-offset-2');
+                if(btn.dataset.color === colorClass) btn.classList.add('ring-2', 'ring-offset-2');
+            });
+        }
+
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            const name = appNameInput.value.trim();
+            const rawUrl = appUrlInput.value.trim();
+            const desc = appDescInput.value.trim();
+            const category = appCategoryInput.value;
+            const icon = appIconInput.value;
+            const color = appColorInput.value;
+            const editId = editAppIdInput.value;
+
+            if (!name) return alert('アプリ名を入力してください');
+            const validUrl = normalizeUrl(rawUrl);
+            if (!validUrl) return alert('有効なURLを入力してください');
+
+            const appData = {
+                name,
+                url: validUrl,
+                description: desc,
+                category,
+                icon,
+                color
+            };
+
+            saveToFirestore(appData, editId);
+        });
+
+        // アプリケーション開始
+        initFirestoreListener();
+
+    </script>
+</body>
+</html>
