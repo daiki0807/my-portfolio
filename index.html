@@ -1,45 +1,57 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My App Portfolio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;500;700&display=swap"
+        rel="stylesheet">
+
     <style>
         body {
             font-family: 'Inter', 'Noto Sans JP', sans-serif;
             background-color: #f3f4f6;
             color: #1f2937;
         }
+
         .card-hover {
             transition: all 0.3s ease;
         }
+
         .card-hover:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
         }
+
         .gradient-text {
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-image: linear-gradient(to right, #2563eb, #9333ea);
         }
+
         /* モーダルアニメーション */
         .modal {
             transition: opacity 0.25s ease;
         }
+
         body.modal-active {
-            overflow: hidden; /* 背景スクロール防止 */
+            overflow: hidden;
+            /* 背景スクロール防止 */
         }
+
         /* フィルターボタンのアクティブスタイル */
         .filter-btn.active {
-            background-color: #1f2937; /* gray-800 */
+            background-color: #1f2937;
+            /* gray-800 */
             color: white;
             border-color: #1f2937;
         }
+
         /* テキストの改行制御 */
         .line-clamp-3 {
             display: -webkit-box;
@@ -49,6 +61,7 @@
         }
     </style>
 </head>
+
 <body class="min-h-screen flex flex-col relative">
 
     <header class="bg-white shadow-sm sticky top-0 z-40">
@@ -66,7 +79,7 @@
     </header>
 
     <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
-        
+
         <div class="text-center mb-8">
             <h2 class="text-4xl font-extrabold mb-4">
                 <span class="gradient-text">Apps & Projects</span>
@@ -77,25 +90,31 @@
         </div>
 
         <div class="max-w-4xl mx-auto mb-10 space-y-6">
-            
+
             <div class="relative max-w-md mx-auto">
                 <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                <input type="text" id="searchInput" placeholder="アプリを検索..." 
+                <input type="text" id="searchInput" placeholder="アプリを検索..."
                     class="w-full pl-10 pr-4 py-3 rounded-full border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition shadow-sm bg-white">
             </div>
 
             <div class="flex flex-wrap justify-center gap-2" id="filterContainer">
-                <button data-filter="All" class="filter-btn active px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">すべて</button>
-                <button data-filter="Tool" class="filter-btn px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">Tool</button>
-                <button data-filter="Game" class="filter-btn px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">Game</button>
-                <button data-filter="Web" class="filter-btn px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">Web</button>
-                <button data-filter="Design" class="filter-btn px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">Design</button>
-                <button data-filter="Other" class="filter-btn px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">Other</button>
+                <button data-filter="All"
+                    class="filter-btn active px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">すべて</button>
+                <button data-filter="Tool"
+                    class="filter-btn px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">Tool</button>
+                <button data-filter="Game"
+                    class="filter-btn px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">Game</button>
+                <button data-filter="Web"
+                    class="filter-btn px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">Web</button>
+                <button data-filter="Design"
+                    class="filter-btn px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">Design</button>
+                <button data-filter="Other"
+                    class="filter-btn px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">Other</button>
             </div>
         </div>
 
         <div id="appGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            </div>
+        </div>
 
         <div id="noResults" class="hidden text-center py-12 text-gray-500">
             <i class="fa-regular fa-face-frown text-4xl mb-3"></i>
@@ -109,19 +128,26 @@
         </div>
     </footer>
 
-    <button id="addAppBtn" class="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-2xl transition transform hover:scale-110 z-50 focus:outline-none focus:ring-4 focus:ring-blue-300" title="新しいアプリを追加" aria-label="新しいアプリを追加">
+    <button id="addAppBtn"
+        class="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-2xl transition transform hover:scale-110 z-50 focus:outline-none focus:ring-4 focus:ring-blue-300"
+        title="新しいアプリを追加" aria-label="新しいアプリを追加">
         <i class="fa-solid fa-plus"></i>
     </button>
 
-    <div id="modal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50" aria-hidden="true" role="dialog" aria-labelledby="modalTitle">
+    <div id="modal"
+        class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50"
+        aria-hidden="true" role="dialog" aria-labelledby="modalTitle">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50 backdrop-blur-sm"></div>
-        
-        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-xl shadow-2xl z-50 overflow-y-auto max-h-[90vh] transform transition-transform scale-95">
-            
+
+        <div
+            class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-xl shadow-2xl z-50 overflow-y-auto max-h-[90vh] transform transition-transform scale-95">
+
             <div class="modal-content py-4 text-left px-6">
                 <div class="flex justify-between items-center pb-3 border-b border-gray-100">
                     <p id="modalTitle" class="text-2xl font-bold text-gray-800">アプリを追加</p>
-                    <button class="modal-close cursor-pointer z-50 text-gray-500 hover:text-gray-800 p-2 focus:outline-none focus:ring-2 focus:ring-gray-300 rounded" aria-label="閉じる">
+                    <button
+                        class="modal-close cursor-pointer z-50 text-gray-500 hover:text-gray-800 p-2 focus:outline-none focus:ring-2 focus:ring-gray-300 rounded"
+                        aria-label="閉じる">
                         <i class="fa-solid fa-times text-xl"></i>
                     </button>
                 </div>
@@ -129,22 +155,32 @@
                 <div class="my-5 space-y-4">
                     <input type="hidden" id="editAppId">
                     <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="appName">アプリ名 <span class="text-red-500">*</span></label>
-                        <input class="shadow-sm appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" id="appName" type="text" placeholder="例: Todoリスト">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="appName">アプリ名 <span
+                                class="text-red-500">*</span></label>
+                        <input
+                            class="shadow-sm appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                            id="appName" type="text" placeholder="例: Todoリスト">
                     </div>
                     <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="appUrl">URL <span class="text-red-500">*</span> <span class="text-xs text-gray-400 font-normal">(http/https)</span></label>
-                        <input class="shadow-sm appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" id="appUrl" type="url" placeholder="https://example.com">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="appUrl">URL <span
+                                class="text-red-500">*</span> <span
+                                class="text-xs text-gray-400 font-normal">(http/https)</span></label>
+                        <input
+                            class="shadow-sm appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                            id="appUrl" type="url" placeholder="https://example.com">
                     </div>
                     <div>
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="appDesc">説明</label>
-                        <textarea class="shadow-sm appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" id="appDesc" rows="3" placeholder="簡単な説明を入力"></textarea>
+                        <textarea
+                            class="shadow-sm appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                            id="appDesc" rows="3" placeholder="簡単な説明を入力"></textarea>
                     </div>
-                    
+
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-gray-700 text-sm font-bold mb-2">カテゴリ</label>
-                            <select id="appCategory" class="shadow-sm border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white">
+                            <select id="appCategory"
+                                class="shadow-sm border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white">
                                 <option value="Tool">Tool</option>
                                 <option value="Game">Game</option>
                                 <option value="Web">Web</option>
@@ -154,7 +190,8 @@
                         </div>
                         <div>
                             <label class="block text-gray-700 text-sm font-bold mb-2">アイコン</label>
-                            <select id="appIcon" class="shadow-sm border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white">
+                            <select id="appIcon"
+                                class="shadow-sm border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white">
                                 <option value="fa-cube">Cube (基本)</option>
                                 <option value="fa-check-circle">Check (Todo)</option>
                                 <option value="fa-gamepad">Gamepad (ゲーム)</option>
@@ -172,12 +209,24 @@
                     <div>
                         <label class="block text-gray-700 text-sm font-bold mb-2">テーマカラー</label>
                         <div class="flex flex-wrap gap-2">
-                            <button type="button" data-color="bg-blue-500" class="color-btn w-8 h-8 rounded-full bg-blue-500 ring-2 ring-offset-2 ring-blue-500 focus:outline-none hover:opacity-80 transition" aria-label="Blue"></button>
-                            <button type="button" data-color="bg-purple-500" class="color-btn w-8 h-8 rounded-full bg-purple-500 focus:outline-none hover:opacity-80 transition" aria-label="Purple"></button>
-                            <button type="button" data-color="bg-emerald-500" class="color-btn w-8 h-8 rounded-full bg-emerald-500 focus:outline-none hover:opacity-80 transition" aria-label="Emerald"></button>
-                            <button type="button" data-color="bg-orange-400" class="color-btn w-8 h-8 rounded-full bg-orange-400 focus:outline-none hover:opacity-80 transition" aria-label="Orange"></button>
-                            <button type="button" data-color="bg-rose-500" class="color-btn w-8 h-8 rounded-full bg-rose-500 focus:outline-none hover:opacity-80 transition" aria-label="Rose"></button>
-                            <button type="button" data-color="bg-gray-700" class="color-btn w-8 h-8 rounded-full bg-gray-700 focus:outline-none hover:opacity-80 transition" aria-label="Gray"></button>
+                            <button type="button" data-color="bg-blue-500"
+                                class="color-btn w-8 h-8 rounded-full bg-blue-500 ring-2 ring-offset-2 ring-blue-500 focus:outline-none hover:opacity-80 transition"
+                                aria-label="Blue"></button>
+                            <button type="button" data-color="bg-purple-500"
+                                class="color-btn w-8 h-8 rounded-full bg-purple-500 focus:outline-none hover:opacity-80 transition"
+                                aria-label="Purple"></button>
+                            <button type="button" data-color="bg-emerald-500"
+                                class="color-btn w-8 h-8 rounded-full bg-emerald-500 focus:outline-none hover:opacity-80 transition"
+                                aria-label="Emerald"></button>
+                            <button type="button" data-color="bg-orange-400"
+                                class="color-btn w-8 h-8 rounded-full bg-orange-400 focus:outline-none hover:opacity-80 transition"
+                                aria-label="Orange"></button>
+                            <button type="button" data-color="bg-rose-500"
+                                class="color-btn w-8 h-8 rounded-full bg-rose-500 focus:outline-none hover:opacity-80 transition"
+                                aria-label="Rose"></button>
+                            <button type="button" data-color="bg-gray-700"
+                                class="color-btn w-8 h-8 rounded-full bg-gray-700 focus:outline-none hover:opacity-80 transition"
+                                aria-label="Gray"></button>
                         </div>
                         <input type="hidden" id="appColor" value="bg-blue-500">
                     </div>
@@ -185,8 +234,10 @@
                 </div>
 
                 <div class="flex justify-end pt-2 gap-2">
-                    <button id="cancelBtn" class="px-4 py-2 bg-gray-100 p-3 rounded-lg text-gray-700 hover:bg-gray-200 font-medium transition focus:outline-none focus:ring-2 focus:ring-gray-300">キャンセル</button>
-                    <button id="saveBtn" class="px-4 py-2 bg-blue-600 rounded-lg text-white hover:bg-blue-700 font-medium shadow-md transition transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500">保存する</button>
+                    <button id="cancelBtn"
+                        class="px-4 py-2 bg-gray-100 p-3 rounded-lg text-gray-700 hover:bg-gray-200 font-medium transition focus:outline-none focus:ring-2 focus:ring-gray-300">キャンセル</button>
+                    <button id="saveBtn"
+                        class="px-4 py-2 bg-blue-600 rounded-lg text-white hover:bg-blue-700 font-medium shadow-md transition transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500">保存する</button>
                 </div>
             </div>
         </div>
@@ -195,7 +246,7 @@
     <script type="module">
         // ブラウザで直接動くようにCDN形式のURLにしています
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp } 
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp }
             from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // --------------------------------------------------------
@@ -213,11 +264,11 @@
 
         // 初期化
         const app = initializeApp(firebaseConfig);
-        
-        // ★重要: ここで "(default)" ではなく "portfolio" データベースを使うよう指定しています
-        const db = getFirestore(app, "portfolio");
-        
-        const APPS_COLLECTION = "portfolio_apps"; 
+
+        // ★重要: ここで "(default)" データベースを使うように修正しました（"portfolio" データベースの権限エラー回避のため）
+        const db = getFirestore(app);
+
+        const APPS_COLLECTION = "portfolio_apps";
 
         // --------------------------------------------------------
         // アプリケーション状態 & UI要素
@@ -245,10 +296,28 @@
                     id: doc.id,
                     ...doc.data()
                 }));
-                
+
                 renderApps();
-                
-                if(loadingMsg.parentNode) loadingMsg.parentNode.removeChild(loadingMsg);
+
+                if (loadingMsg.parentNode) loadingMsg.parentNode.removeChild(loadingMsg);
+            }, (error) => {
+                console.error("Firestore Error:", error);
+
+                // エラーメッセージを表示
+                if (loadingMsg.parentNode) loadingMsg.parentNode.removeChild(loadingMsg);
+
+                const errorMsg = document.createElement('div');
+                errorMsg.className = "col-span-full text-center py-10 text-red-500 bg-red-50 rounded-lg border border-red-200";
+
+                let message = "データの読み込みに失敗しました。";
+                if (error.code === 'permission-denied') {
+                    message += "<br>アクセス権限がありません。(Firestore Rules)";
+                } else {
+                    message += "<br>" + error.message;
+                }
+
+                errorMsg.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-3xl mb-3"></i><p>${message}</p>`;
+                grid.appendChild(errorMsg);
             });
         }
 
@@ -279,7 +348,7 @@
         // データ削除
         // --------------------------------------------------------
         async function deleteFromFirestore(id) {
-            if(confirm('このアプリを削除しますか？\n(クラウド上のデータも削除されます)')) {
+            if (confirm('このアプリを削除しますか？\n(クラウド上のデータも削除されます)')) {
                 try {
                     await deleteDoc(doc(db, APPS_COLLECTION, id));
                 } catch (error) {
@@ -293,8 +362,8 @@
         // サンプルデータ追加 (管理者用機能)
         // --------------------------------------------------------
         async function addSampleData() {
-            if(!confirm('サンプルデータをデータベースに追加しますか？')) return;
-            
+            if (!confirm('サンプルデータをデータベースに追加しますか？')) return;
+
             const samples = [
                 { name: "サンプル Todoリスト", url: "#", description: "シンプルで使いやすいタスク管理ツールです。", category: "Tool", icon: "fa-check-circle", color: "bg-blue-500" },
                 { name: "ブロック崩しゲーム", url: "#", description: "懐かしのレトロゲーム。", category: "Game", icon: "fa-gamepad", color: "bg-purple-500" },
@@ -324,12 +393,12 @@
 
         function renderApps() {
             grid.innerHTML = '';
-            
+
             const searchText = state.searchQuery.toLowerCase();
             const currentFilter = state.filter;
 
             const filteredApps = state.apps.filter(app => {
-                const matchesText = (app.name + (app.description||"") + app.category).toLowerCase().includes(searchText);
+                const matchesText = (app.name + (app.description || "") + app.category).toLowerCase().includes(searchText);
                 const matchesCategory = currentFilter === 'All' || app.category === currentFilter;
                 return matchesText && matchesCategory;
             });
@@ -352,12 +421,12 @@
 
                 const headerDiv = document.createElement('div');
                 headerDiv.className = "flex items-start justify-between mb-4";
-                
+
                 const iconDiv = document.createElement('div');
                 const colorClass = app.color || 'bg-blue-500';
                 iconDiv.className = `w-12 h-12 rounded-lg ${colorClass} text-white flex items-center justify-center text-2xl shadow-md transition-transform group-hover:scale-110 shrink-0`;
                 iconDiv.innerHTML = `<i class="fa-solid ${app.icon || 'fa-cube'}"></i>`;
-                
+
                 const catSpan = document.createElement('span');
                 catSpan.className = "text-xs font-semibold px-2 py-1 bg-gray-100 text-gray-600 rounded-full shrink-0";
                 catSpan.textContent = app.category;
@@ -409,7 +478,7 @@
                 const category = e.target.dataset.filter;
                 state.filter = category;
                 document.querySelectorAll('.filter-btn').forEach(btn => {
-                    if(btn.dataset.filter === category) {
+                    if (btn.dataset.filter === category) {
                         btn.classList.add('active', 'bg-gray-800', 'text-white', 'border-gray-800');
                         btn.classList.remove('bg-white', 'text-gray-600');
                     } else {
@@ -428,7 +497,7 @@
         const modalContainer = modal.querySelector('.modal-container');
         const modalTitle = document.getElementById('modalTitle');
         const editAppIdInput = document.getElementById('editAppId');
-        
+
         const appNameInput = document.getElementById('appName');
         const appUrlInput = document.getElementById('appUrl');
         const appDescInput = document.getElementById('appDesc');
@@ -491,7 +560,7 @@
             appColorInput.value = colorClass;
             colorBtns.forEach(btn => {
                 btn.classList.remove('ring-2', 'ring-offset-2');
-                if(btn.dataset.color === colorClass) btn.classList.add('ring-2', 'ring-offset-2');
+                if (btn.dataset.color === colorClass) btn.classList.add('ring-2', 'ring-offset-2');
             });
         }
 
@@ -525,4 +594,5 @@
 
     </script>
 </body>
+
 </html>
