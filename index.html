@@ -248,7 +248,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp }
             from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+        import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged, getRedirectResult }
             from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // --------------------------------------------------------
@@ -313,6 +313,14 @@
             headerRight.innerHTML = '';
             headerRight.appendChild(authContainer);
 
+            // リダイレクト結果の確認
+            getRedirectResult(auth).catch((error) => {
+                console.error("Redirect Login Error:", error);
+                if (error.code === 'auth/unauthorized-domain') {
+                    alert("ドメインが許可されていません。Firebaseコンソールを確認してください。");
+                }
+            });
+
             onAuthStateChanged(auth, (user) => {
                 state.currentUser = user;
                 state.isAdmin = user && user.email === ADMIN_EMAIL;
@@ -356,10 +364,10 @@
                 loginBtn.innerHTML = '<i class="fa-brands fa-google mr-2"></i>管理者ログイン';
                 loginBtn.onclick = async () => {
                     try {
-                        await signInWithPopup(auth, provider);
+                        await signInWithRedirect(auth, provider);
                     } catch (error) {
                         console.error("Login failed:", error);
-                        alert("ログインに失敗しました");
+                        alert("ログイン開始に失敗しました");
                     }
                 };
                 container.appendChild(loginBtn);
