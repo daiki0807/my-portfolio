@@ -248,6 +248,8 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp }
             from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+            from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // --------------------------------------------------------
         // ★新しいプロジェクトの鍵 (helpful-passage-430405-b3)
@@ -264,11 +266,12 @@
 
         // 初期化
         const app = initializeApp(firebaseConfig);
-
-        // ★重要: ここで "(default)" データベースを使うように修正しました（"portfolio" データベースの権限エラー回避のため）
         const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
 
         const APPS_COLLECTION = "portfolio_apps";
+        const ADMIN_EMAIL = "d.a0807derude@gmail.com";
 
         // --------------------------------------------------------
         // アプリケーション状態 & UI要素
@@ -276,14 +279,101 @@
         let state = {
             apps: [],
             filter: 'All',
-            searchQuery: ''
+            searchQuery: '',
+            currentUser: null,
+            isAdmin: false
         };
 
         const grid = document.getElementById('appGrid');
         const noResults = document.getElementById('noResults');
+        const addAppBtn = document.getElementById('addAppBtn');
+        const resetButton = document.getElementById('resetButton'); // サンプル追加ボタン
+
+        // ヘッダーにログインボタンエリアを追加
+        const headerRight = document.querySelector('header .flex.items-center.gap-4');
+        // 既存のリセットボタンを一度クリア（または非表示）にして、ログインボタンを配置する
+        // ここではサンプル追加ボタンは管理者のみに表示するように制御するため、動的に管理します
+
+        const contentContainer = document.querySelector('main');
+
+        // ローディングUI
         const loadingMsg = document.createElement('div');
         loadingMsg.className = "col-span-full text-center py-10 text-gray-500";
         loadingMsg.textContent = "データを読み込み中...";
+
+        // --------------------------------------------------------
+        // 認証ロジック
+        // --------------------------------------------------------
+        function initAuth() {
+            // ログインボタン等のUI作成
+            const authContainer = document.createElement('div');
+            authContainer.className = "flex items-center gap-3";
+
+            // 既存のコンテンツをクリアしてAuthコンテナを入れる
+            headerRight.innerHTML = '';
+            headerRight.appendChild(authContainer);
+
+            onAuthStateChanged(auth, (user) => {
+                state.currentUser = user;
+                state.isAdmin = user && user.email === ADMIN_EMAIL;
+
+                renderAuthUI(authContainer);
+                updateAdminUI(); // 権限変更に合わせてUI更新
+                renderApps(); // アプリ一覧も権限に合わせて再描画（編集ボタンの出し分け）
+            });
+        }
+
+        function renderAuthUI(container) {
+            container.innerHTML = '';
+
+            if (state.currentUser) {
+                // ログイン済み
+                const userInfo = document.createElement('div');
+                userInfo.className = "flex items-center gap-2 text-sm text-gray-700 hidden sm:flex";
+                // userInfo.innerHTML = `<img src="${state.currentUser.photoURL}" class="w-6 h-6 rounded-full"> <span>${state.currentUser.displayName}</span>`;
+
+                const logoutBtn = document.createElement('button');
+                logoutBtn.className = "text-xs text-gray-500 hover:text-red-500 transition-colors border border-gray-200 px-3 py-1 rounded-full bg-gray-50";
+                logoutBtn.textContent = "ログアウト";
+                logoutBtn.onclick = () => signOut(auth);
+
+                container.append(userInfo, logoutBtn);
+
+                // 管理者ならサンプル追加ボタンも表示（必要であれば）
+                if (state.isAdmin) {
+                    const sampleBtn = document.createElement('button');
+                    sampleBtn.id = "resetButton";
+                    sampleBtn.className = "text-xs text-gray-400 hover:text-blue-500 underline transition-colors ml-2";
+                    sampleBtn.textContent = "サンプル追加";
+                    sampleBtn.onclick = addSampleData;
+                    container.appendChild(sampleBtn);
+                }
+
+            } else {
+                // 未ログイン
+                const loginBtn = document.createElement('button');
+                loginBtn.className = "bg-gray-900 text-white text-xs px-4 py-2 rounded-full hover:bg-gray-700 transition-colors shadow-sm font-medium";
+                loginBtn.innerHTML = '<i class="fa-brands fa-google mr-2"></i>管理者ログイン';
+                loginBtn.onclick = async () => {
+                    try {
+                        await signInWithPopup(auth, provider);
+                    } catch (error) {
+                        console.error("Login failed:", error);
+                        alert("ログインに失敗しました");
+                    }
+                };
+                container.appendChild(loginBtn);
+            }
+        }
+
+        function updateAdminUI() {
+            // 追加ボタンの表示制御
+            if (state.isAdmin) {
+                addAppBtn.classList.remove('hidden');
+            } else {
+                addAppBtn.classList.add('hidden');
+            }
+        }
 
         // --------------------------------------------------------
         // Firestoreとのリアルタイム同期
@@ -325,6 +415,8 @@
         // データ保存 (追加・更新)
         // --------------------------------------------------------
         async function saveToFirestore(appData, editId = null) {
+            if (!state.isAdmin) return alert("権限がありません");
+
             try {
                 const payload = {
                     ...appData,
@@ -348,6 +440,8 @@
         // データ削除
         // --------------------------------------------------------
         async function deleteFromFirestore(id) {
+            if (!state.isAdmin) return alert("権限がありません");
+
             if (confirm('このアプリを削除しますか？\n(クラウド上のデータも削除されます)')) {
                 try {
                     await deleteDoc(doc(db, APPS_COLLECTION, id));
@@ -362,6 +456,7 @@
         // サンプルデータ追加 (管理者用機能)
         // --------------------------------------------------------
         async function addSampleData() {
+            if (!state.isAdmin) return;
             if (!confirm('サンプルデータをデータベースに追加しますか？')) return;
 
             const samples = [
@@ -374,8 +469,6 @@
                 await addDoc(collection(db, APPS_COLLECTION), s);
             }
         }
-
-        document.getElementById('resetButton').onclick = addSampleData;
 
         // ========================================================
         //  UIロジック (レンダリング・モーダルなど)
@@ -447,22 +540,30 @@
 
                 link.append(headerDiv, title, desc, openDiv);
 
-                const actionsDiv = document.createElement('div');
-                actionsDiv.className = "absolute top-2 right-2 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200";
+                // --- 管理者のみ編集ボタンを表示 ---
+                let actionsDiv = null;
+                if (state.isAdmin) {
+                    actionsDiv = document.createElement('div');
+                    actionsDiv.className = "absolute top-2 right-2 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200";
 
-                const createBtn = (icon, title, colorClass, handler) => {
-                    const btn = document.createElement('button');
-                    btn.className = `w-8 h-8 bg-white text-gray-500 rounded-full hover:${colorClass} flex items-center justify-center shadow-sm border border-gray-200 transition-colors`;
-                    btn.title = title;
-                    btn.innerHTML = `<i class="fa-solid ${icon} text-xs"></i>`;
-                    btn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); handler(); };
-                    return btn;
-                };
+                    const createBtn = (icon, title, colorClass, handler) => {
+                        const btn = document.createElement('button');
+                        btn.className = `w-8 h-8 bg-white text-gray-500 rounded-full hover:${colorClass} flex items-center justify-center shadow-sm border border-gray-200 transition-colors`;
+                        btn.title = title;
+                        btn.innerHTML = `<i class="fa-solid ${icon} text-xs"></i>`;
+                        btn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); handler(); };
+                        return btn;
+                    };
 
-                actionsDiv.appendChild(createBtn('fa-pen', '編集', 'bg-blue-50 hover:text-blue-600', () => openModal(app.id)));
-                actionsDiv.appendChild(createBtn('fa-trash-can', '削除', 'bg-red-50 hover:text-red-500', () => deleteFromFirestore(app.id)));
+                    actionsDiv.appendChild(createBtn('fa-pen', '編集', 'bg-blue-50 hover:text-blue-600', () => openModal(app.id)));
+                    actionsDiv.appendChild(createBtn('fa-trash-can', '削除', 'bg-red-50 hover:text-red-500', () => deleteFromFirestore(app.id)));
+                }
 
-                cardWrapper.append(link, actionsDiv);
+                cardWrapper.append(link);
+                if (actionsDiv) {
+                    cardWrapper.append(actionsDiv);
+                }
+
                 grid.appendChild(cardWrapper);
             });
         }
@@ -490,7 +591,13 @@
             }
         });
 
-        document.getElementById('addAppBtn').addEventListener('click', () => openModal());
+        // "Add Button" is now initially hidden via CSS (or js logic) 
+        // We set it to hidden by default in init, but let's make sure the click listener is there
+        if (addAppBtn) {
+            addAppBtn.addEventListener('click', () => openModal());
+            // 初期状態は非表示（auth check後に表示）
+            addAppBtn.classList.add('hidden');
+        }
 
         // モーダル関連
         const modal = document.getElementById('modal');
@@ -506,6 +613,8 @@
         const appColorInput = document.getElementById('appColor');
 
         function openModal(editId = null) {
+            if (!state.isAdmin) return;
+
             document.body.classList.add('modal-active');
             if (editId) {
                 const app = state.apps.find(a => a.id === editId);
@@ -590,9 +699,11 @@
         });
 
         // アプリケーション開始
+        initAuth();
         initFirestoreListener();
 
     </script>
+
 </body>
 
 </html>
