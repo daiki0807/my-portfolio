@@ -248,7 +248,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp }
             from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged, getRedirectResult }
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
             from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // --------------------------------------------------------
@@ -313,13 +313,8 @@
             headerRight.innerHTML = '';
             headerRight.appendChild(authContainer);
 
-            // リダイレクト結果の確認
-            getRedirectResult(auth).catch((error) => {
-                console.error("Redirect Login Error:", error);
-                if (error.code === 'auth/unauthorized-domain') {
-                    alert("ドメインが許可されていません。Firebaseコンソールを確認してください。");
-                }
-            });
+            // Removed redirect result handling as we are switching to popup
+
 
             onAuthStateChanged(auth, (user) => {
                 state.currentUser = user;
@@ -364,10 +359,14 @@
                 loginBtn.innerHTML = '<i class="fa-brands fa-google mr-2"></i>管理者ログイン';
                 loginBtn.onclick = async () => {
                     try {
-                        await signInWithRedirect(auth, provider);
+                        await signInWithPopup(auth, provider);
                     } catch (error) {
                         console.error("Login failed:", error);
-                        alert("ログイン開始に失敗しました");
+                        if (error.code === 'auth/unauthorized-domain') {
+                            alert("ドメインが許可されていません。Firebaseコンソールを確認してください。");
+                        } else {
+                            alert("ログインに失敗しました: " + error.message);
+                        }
                     }
                 };
                 container.appendChild(loginBtn);
