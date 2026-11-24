@@ -38,6 +38,7 @@
                 radial-gradient(circle at 50% 85%, rgba(168, 85, 247, 0.10), transparent 48%),
                 linear-gradient(180deg, #f8fafc 0%, #eef2f9 55%, #f5f7fb 100%);
             overflow: hidden;
+            pointer-events: none;
         }
 
         .ambient-orb {
@@ -47,6 +48,11 @@
             opacity: 0.55;
             pointer-events: none;
             animation: orbFloat 18s ease-in-out infinite alternate;
+        }
+
+        /* モーダル編集中は背景アニメーションを停止して入力描画を安定化 */
+        body.modal-active .ambient-orb {
+            animation-play-state: paused;
         }
 
         .ambient-orb-1 {
@@ -77,7 +83,6 @@
             animation-duration: 25s;
         }
 
-        /* 空間の奥行きを感じさせる微細なドットグリッド */
         .studio-grid-overlay {
             position: fixed;
             inset: 0;
@@ -105,7 +110,6 @@
             background-image: linear-gradient(135deg, #1d4ed8 0%, #4f46e5 48%, #9333ea 100%);
         }
 
-        /* テキスト3行省略 */
         .line-clamp-3 {
             display: -webkit-box;
             -webkit-line-clamp: 3;
@@ -117,7 +121,7 @@
            フィルターボタン ＆ ビュー切替スイッチ
         ========================================= */
         .filter-btn {
-            transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
         .filter-btn:hover {
@@ -137,7 +141,7 @@
             display: inline-flex;
             padding: 4px;
             border-radius: 9999px;
-            background: rgba(255, 255, 255, 0.78);
+            background: rgba(255, 255, 255, 0.82);
             border: 1px solid rgba(226, 232, 240, 0.95);
             box-shadow:
                 0 8px 22px -6px rgba(15, 23, 42, 0.08),
@@ -155,7 +159,7 @@
             border-radius: 9999px;
             background: linear-gradient(135deg, #2563eb, #4f46e5);
             box-shadow: 0 6px 16px -3px rgba(37, 99, 235, 0.45);
-            transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
             z-index: 0;
         }
 
@@ -171,7 +175,7 @@
             border-radius: 9999px;
             font-size: 0.82rem;
             font-weight: 700;
-            transition: color 0.25s ease;
+            transition: color 0.22s ease;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -187,10 +191,23 @@
         }
 
         /* =========================================
-           リアル3Dカード 共通構造（WebKit preserve-3d対応）
+           リアル3Dカード 共通構造
+           （管理者ボタンは3D空間の外に分離して座標ズレを防止）
         ========================================= */
+        .card-item-shell {
+            position: relative;
+            height: 100%;
+        }
+
         .card-3d-scene {
             perspective: var(--perspective-grid);
+            height: 100%;
+        }
+
+        /* Stage内では親のstageViewportがperspectiveを持つため二重適用しない */
+        .card-3d-scene--stage {
+            perspective: none;
+            transform-style: preserve-3d;
             height: 100%;
         }
 
@@ -211,32 +228,27 @@
             border-radius: 22px;
             transform-style: preserve-3d;
             transform: rotateX(var(--rx)) rotateY(var(--ry)) translateZ(var(--tz));
-            transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
             will-change: transform;
         }
 
-        .card-3d-body.is-tilting {
-            transition: transform 0.08s linear;
-        }
-
-        /* 物理カードの背面プレート（厚み表現 Z=-7px） */
+        /* 物理カードの背面プレート（厚み表現 Z=-6px） */
         .card-3d-backplate {
             position: absolute;
             inset: 0;
             border-radius: 22px;
             background: linear-gradient(145deg, #cbd5e1, #e2e8f0);
-            transform: translateZ(-7px);
+            transform: translateZ(-6px);
             box-shadow:
-                var(--shadow-x) var(--shadow-y) 36px -10px rgba(15, 23, 42, 0.16),
+                var(--shadow-x) var(--shadow-y) 34px -10px rgba(15, 23, 42, 0.16),
                 0 8px 20px -8px var(--accent-glow);
-            transition: box-shadow 0.35s ease;
+            transition: box-shadow 0.3s ease;
             pointer-events: none;
         }
 
-        .card-3d-body:hover .card-3d-backplate {
+        .card-item-shell:hover .card-3d-backplate {
             box-shadow:
-                var(--shadow-x) calc(var(--shadow-y) + 8px) 44px -8px rgba(15, 23, 42, 0.22),
-                0 14px 30px -6px var(--accent-glow);
+                var(--shadow-x) calc(var(--shadow-y) + 6px) 42px -8px rgba(15, 23, 42, 0.21),
+                0 14px 28px -6px var(--accent-glow);
         }
 
         /* カード表面（Z=0px・角丸クリップ担当） */
@@ -246,16 +258,15 @@
             border-radius: 22px;
             overflow: hidden;
             transform: translateZ(0px);
-            background: linear-gradient(155deg, rgba(255, 255, 255, 0.97) 0%, rgba(248, 250, 252, 0.92) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.95);
+            background: linear-gradient(155deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.94) 100%);
+            border: 1px solid rgba(226, 232, 240, 0.95);
             box-shadow:
                 inset 0 1px 0 rgba(255, 255, 255, 1),
-                inset 0 -1px 0 rgba(203, 213, 225, 0.65),
-                0 1px 2px rgba(15, 23, 42, 0.05);
+                inset 0 -1px 0 rgba(203, 213, 225, 0.6),
+                0 1px 2px rgba(15, 23, 42, 0.04);
             pointer-events: none;
         }
 
-        /* カード上部のカラーアクセントライン */
         .card-accent-bar {
             position: absolute;
             top: 0;
@@ -265,34 +276,32 @@
             opacity: 0.92;
         }
 
-        /* カード右下の淡いウォーターマーク装飾 */
         .card-watermark {
             position: absolute;
             right: -14px;
             bottom: -18px;
-            font-size: 6.2rem;
-            opacity: 0.045;
+            font-size: 6rem;
+            opacity: 0.042;
             transform: rotate(-14deg);
             pointer-events: none;
             color: #0f172a;
         }
 
-        /* 光の反射（グレア）＋ ホログラム艶レイヤー */
         .card-glare {
             position: absolute;
             inset: 0;
             opacity: var(--glare-alpha);
-            transition: opacity 0.3s ease;
+            transition: opacity 0.25s ease;
             background:
-                radial-gradient(circle 250px at var(--mx) var(--my),
-                    rgba(255, 255, 255, 0.9) 0%,
-                    rgba(255, 255, 255, 0.32) 34%,
+                radial-gradient(circle 240px at var(--mx) var(--my),
+                    rgba(255, 255, 255, 0.88) 0%,
+                    rgba(255, 255, 255, 0.28) 35%,
                     rgba(255, 255, 255, 0) 70%),
                 linear-gradient(125deg,
                     transparent 20%,
-                    rgba(99, 102, 241, 0.07) 38%,
-                    rgba(56, 189, 248, 0.09) 50%,
-                    rgba(236, 72, 153, 0.06) 62%,
+                    rgba(99, 102, 241, 0.06) 38%,
+                    rgba(56, 189, 248, 0.08) 50%,
+                    rgba(236, 72, 153, 0.05) 62%,
                     transparent 80%);
             mix-blend-mode: soft-light;
             pointer-events: none;
@@ -301,15 +310,15 @@
         .card-specular-sheen {
             position: absolute;
             inset: 0;
-            opacity: calc(var(--glare-alpha) * 0.55);
-            transition: opacity 0.3s ease;
-            background: radial-gradient(circle 190px at var(--mx) var(--my),
-                    rgba(255, 255, 255, 0.72) 0%,
+            opacity: calc(var(--glare-alpha) * 0.5);
+            transition: opacity 0.25s ease;
+            background: radial-gradient(circle 180px at var(--mx) var(--my),
+                    rgba(255, 255, 255, 0.68) 0%,
                     rgba(255, 255, 255, 0) 68%);
             pointer-events: none;
         }
 
-        /* 立体浮き出しコンテンツ層（preserve-3d維持） */
+        /* 立体コンテンツ層 */
         .card-3d-content {
             position: relative;
             z-index: 2;
@@ -321,44 +330,49 @@
         }
 
         .layer-z-icon {
-            transform: translateZ(36px);
-            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+            transform: translateZ(26px);
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        .card-3d-body:hover .layer-z-icon {
-            transform: translateZ(46px) scale(1.05);
+        .card-item-shell:hover .layer-z-icon {
+            transform: translateZ(34px) scale(1.04);
         }
 
         .layer-z-tags {
-            transform: translateZ(24px);
+            transform: translateZ(16px);
         }
 
         .layer-z-title {
-            transform: translateZ(22px);
+            transform: translateZ(16px);
         }
 
         .layer-z-meta {
-            transform: translateZ(26px);
+            transform: translateZ(18px);
         }
 
         .layer-z-desc {
-            transform: translateZ(14px);
+            transform: translateZ(10px);
         }
 
         .layer-z-cta {
-            transform: translateZ(30px);
+            transform: translateZ(22px);
         }
 
-        .layer-z-admin {
-            transform: translateZ(48px);
-        }
-
-        /* アイコン3Dキューブの立体ハイライト */
         .icon-3d-box {
             box-shadow:
                 0 10px 20px -5px var(--accent-glow),
                 inset 0 2px 2px rgba(255, 255, 255, 0.45),
                 inset 0 -2px 4px rgba(0, 0, 0, 0.18);
+        }
+
+        /* 管理者ボタン：2D平面で常に安定したクリック判定を保証 */
+        .card-admin-actions {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            z-index: 40;
+            display: flex;
+            gap: 6px;
         }
 
         /* =========================================
@@ -367,7 +381,7 @@
         @keyframes cardDealIn {
             0% {
                 opacity: 0;
-                transform: perspective(1100px) translateY(42px) translateZ(-80px) rotateX(-28deg) rotateY(10deg) scale(0.88);
+                transform: perspective(1100px) translateY(34px) translateZ(-60px) rotateX(-22deg) rotateY(8deg) scale(0.9);
             }
             65% {
                 opacity: 1;
@@ -381,7 +395,7 @@
         @keyframes cardQuickPop {
             0% {
                 opacity: 0;
-                transform: scale(0.95) translateY(10px);
+                transform: scale(0.97) translateY(6px);
             }
             100% {
                 opacity: 1;
@@ -391,18 +405,18 @@
 
         .grid-card-enter {
             opacity: 0;
-            animation: cardDealIn 0.62s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            animation: cardDealIn 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
             animation-delay: var(--stagger, 0ms);
         }
 
         .grid-card-quick {
-            animation: cardQuickPop 0.24s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            animation: cardQuickPop 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
 
         .grid-exiting .grid-card-wrapper {
             opacity: 0 !important;
-            transform: perspective(1000px) rotateX(16deg) translateY(14px) scale(0.93) !important;
-            transition: transform 0.16s ease-in, opacity 0.15s ease-in !important;
+            transform: perspective(1000px) rotateX(14deg) translateY(12px) scale(0.94) !important;
+            transition: transform 0.14s ease-in, opacity 0.14s ease-in !important;
         }
 
         /* =========================================
@@ -433,7 +447,6 @@
             }
         }
 
-        /* ステージ床面のスポットライト反射 */
         .stage-floor-glow {
             position: absolute;
             bottom: 8px;
@@ -464,24 +477,22 @@
             height: 315px;
             transform-style: preserve-3d;
             transition:
-                transform 0.62s cubic-bezier(0.22, 1, 0.36, 1),
-                opacity 0.48s ease,
-                filter 0.48s ease;
+                transform 0.58s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 0.45s ease,
+                filter 0.45s ease;
             will-change: transform, opacity;
             cursor: pointer;
         }
 
-        /* 中央以外のカードは少し落ち着かせて中央を際立たせる */
         .stage-slide-item:not(.is-center) {
             filter: brightness(0.96) saturate(0.9);
         }
 
-        .stage-slide-item:not(.is-center) .layer-z-admin {
-            opacity: 0 !important;
-            pointer-events: none;
+        /* 脇のカードでは管理者ボタンを完全に無効化してスライド選択と干渉させない */
+        .stage-slide-item:not(.is-center) .card-admin-actions {
+            display: none !important;
         }
 
-        /* 床面への映り込み風リフレクション（中央カードで強調） */
         .stage-card-reflection {
             position: absolute;
             left: 8%;
@@ -501,11 +512,10 @@
             transform: scaleX(1.08);
         }
 
-        /* ステージ切り替え時のデッキシャッフル演出 */
         @keyframes stageDeckReveal {
             0% {
                 opacity: 0;
-                transform: scale(0.9) translateY(24px);
+                transform: scale(0.92) translateY(20px);
             }
             100% {
                 opacity: 1;
@@ -514,14 +524,14 @@
         }
 
         .stage-entering {
-            animation: stageDeckReveal 0.48s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            animation: stageDeckReveal 0.44s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
 
         .stage-nav-arrow {
             width: 48px;
             height: 48px;
             border-radius: 9999px;
-            background: rgba(255, 255, 255, 0.88);
+            background: rgba(255, 255, 255, 0.9);
             border: 1px solid rgba(226, 232, 240, 0.95);
             box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.14);
             backdrop-filter: blur(10px);
@@ -530,14 +540,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
             z-index: 40;
         }
 
         .stage-nav-arrow:hover {
             background: #ffffff;
             color: #2563eb;
-            transform: scale(1.08);
+            transform: scale(1.06);
             box-shadow: 0 14px 28px -6px rgba(37, 99, 235, 0.25);
         }
 
@@ -548,12 +558,14 @@
         .stage-dot {
             height: 8px;
             border-radius: 9999px;
-            transition: all 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        /* モーダルアニメーション */
+        /* =========================================
+           モーダル（transform・backdrop-filterを排除し入力カーソルズレを防止）
+        ========================================= */
         .modal {
-            transition: opacity 0.25s ease;
+            transition: opacity 0.18s ease;
         }
 
         body.modal-active {
@@ -568,7 +580,6 @@
                 animation: none !important;
                 opacity: 1 !important;
             }
-            .card-3d-body,
             .stage-slide-item {
                 transition-duration: 0.01ms !important;
             }
@@ -587,7 +598,7 @@
     <div class="studio-grid-overlay" aria-hidden="true"></div>
 
     <!-- ヘッダー -->
-    <header class="bg-white/75 backdrop-blur-xl border-b border-white/80 shadow-sm sticky top-0 z-40">
+    <header class="bg-white/80 backdrop-blur-xl border-b border-slate-200/70 shadow-sm sticky top-0 z-40">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center gap-2.5">
                 <div
@@ -596,11 +607,7 @@
                 </div>
                 <h1 class="text-xl font-extrabold tracking-tight text-slate-900">My Portfolio</h1>
             </div>
-            <div class="flex items-center gap-4">
-                <button id="resetButton" class="text-xs text-gray-400 hover:text-blue-500 underline transition-colors">
-                    サンプル追加
-                </button>
-            </div>
+            <div id="headerAuthArea" class="flex items-center gap-4"></div>
         </div>
     </header>
 
@@ -609,7 +616,7 @@
         <!-- ヒーロー見出し -->
         <div class="text-center mb-8">
             <div
-                class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/80 border border-slate-200/80 shadow-sm text-xs font-semibold text-blue-700 mb-3 backdrop-blur">
+                class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/85 border border-slate-200/80 shadow-sm text-xs font-semibold text-blue-700 mb-3">
                 <i class="fa-solid fa-wand-magic-sparkles text-blue-500"></i>
                 <span>Interactive 3D Collection</span>
             </div>
@@ -625,79 +632,84 @@
         <div class="max-w-4xl mx-auto mb-8 space-y-5">
 
             <div class="relative max-w-md mx-auto">
-                <i class="fa-solid fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
                 <input type="text" id="searchInput" placeholder="アプリを検索..."
-                    class="w-full pl-11 pr-4 py-3 rounded-full border border-white/90 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 outline-none transition shadow-md shadow-slate-900/5 bg-white/90 backdrop-blur text-slate-800 placeholder-slate-400">
+                    class="w-full pl-11 pr-9 py-3 rounded-full border border-slate-200/90 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 outline-none transition shadow-md shadow-slate-900/5 bg-white text-slate-800 placeholder-slate-400">
+                <button type="button" id="clearSearchBtn"
+                    class="hidden absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition"
+                    title="検索をクリア" aria-label="検索をクリア">
+                    <i class="fa-solid fa-circle-xmark text-sm"></i>
+                </button>
             </div>
 
             <div id="filterContainer"
-                class="space-y-2.5 bg-white/65 backdrop-blur-md border border-white/90 rounded-2xl p-4 shadow-sm">
+                class="space-y-2.5 bg-white/70 backdrop-blur-md border border-white/90 rounded-2xl p-4 shadow-sm">
                 <!-- カテゴリ -->
                 <div class="flex flex-wrap justify-center gap-1.5 sm:gap-2 items-center">
                     <span class="text-xs text-slate-400 font-bold w-14 text-right shrink-0 mr-1">カテゴリ</span>
-                    <button data-filter-type="category" data-filter="All"
+                    <button type="button" data-filter-type="category" data-filter="All"
                         class="filter-btn active px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">すべて</button>
-                    <button data-filter-type="category" data-filter="Tool"
+                    <button type="button" data-filter-type="category" data-filter="Tool"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">Tool</button>
-                    <button data-filter-type="category" data-filter="Game"
+                    <button type="button" data-filter-type="category" data-filter="Game"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">Game</button>
-                    <button data-filter-type="category" data-filter="Web"
+                    <button type="button" data-filter-type="category" data-filter="Web"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">Web</button>
-                    <button data-filter-type="category" data-filter="Design"
+                    <button type="button" data-filter-type="category" data-filter="Design"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">Design</button>
-                    <button data-filter-type="category" data-filter="Other"
+                    <button type="button" data-filter-type="category" data-filter="Other"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">Other</button>
                 </div>
                 <!-- 教科 -->
                 <div class="flex flex-wrap justify-center gap-1.5 sm:gap-2 items-center">
                     <span class="text-xs text-slate-400 font-bold w-14 text-right shrink-0 mr-1">教科</span>
-                    <button data-filter-type="subject" data-filter="All"
+                    <button type="button" data-filter-type="subject" data-filter="All"
                         class="filter-btn active px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">すべて</button>
-                    <button data-filter-type="subject" data-filter="国語"
+                    <button type="button" data-filter-type="subject" data-filter="国語"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">国語</button>
-                    <button data-filter-type="subject" data-filter="算数"
+                    <button type="button" data-filter-type="subject" data-filter="算数"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">算数</button>
-                    <button data-filter-type="subject" data-filter="理科"
+                    <button type="button" data-filter-type="subject" data-filter="理科"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">理科</button>
-                    <button data-filter-type="subject" data-filter="社会"
+                    <button type="button" data-filter-type="subject" data-filter="社会"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">社会</button>
-                    <button data-filter-type="subject" data-filter="音楽"
+                    <button type="button" data-filter-type="subject" data-filter="音楽"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">音楽</button>
-                    <button data-filter-type="subject" data-filter="図工"
+                    <button type="button" data-filter-type="subject" data-filter="図工"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">図工</button>
-                    <button data-filter-type="subject" data-filter="体育"
+                    <button type="button" data-filter-type="subject" data-filter="体育"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">体育</button>
-                    <button data-filter-type="subject" data-filter="生活"
+                    <button type="button" data-filter-type="subject" data-filter="生活"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">生活</button>
-                    <button data-filter-type="subject" data-filter="道徳"
+                    <button type="button" data-filter-type="subject" data-filter="道徳"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">道徳</button>
-                    <button data-filter-type="subject" data-filter="外国語"
+                    <button type="button" data-filter-type="subject" data-filter="外国語"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">外国語</button>
-                    <button data-filter-type="subject" data-filter="総合"
+                    <button type="button" data-filter-type="subject" data-filter="総合"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">総合</button>
-                    <button data-filter-type="subject" data-filter="自立活動"
+                    <button type="button" data-filter-type="subject" data-filter="自立活動"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">自立活動</button>
-                    <button data-filter-type="subject" data-filter="その他"
+                    <button type="button" data-filter-type="subject" data-filter="その他"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">その他</button>
                 </div>
                 <!-- 学年 -->
                 <div class="flex flex-wrap justify-center gap-1.5 sm:gap-2 items-center">
                     <span class="text-xs text-slate-400 font-bold w-14 text-right shrink-0 mr-1">学年</span>
-                    <button data-filter-type="grade" data-filter="All"
+                    <button type="button" data-filter-type="grade" data-filter="All"
                         class="filter-btn active px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">すべて</button>
-                    <button data-filter-type="grade" data-filter="1年"
+                    <button type="button" data-filter-type="grade" data-filter="1年"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">1年</button>
-                    <button data-filter-type="grade" data-filter="2年"
+                    <button type="button" data-filter-type="grade" data-filter="2年"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">2年</button>
-                    <button data-filter-type="grade" data-filter="3年"
+                    <button type="button" data-filter-type="grade" data-filter="3年"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">3年</button>
-                    <button data-filter-type="grade" data-filter="4年"
+                    <button type="button" data-filter-type="grade" data-filter="4年"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">4年</button>
-                    <button data-filter-type="grade" data-filter="5年"
+                    <button type="button" data-filter-type="grade" data-filter="5年"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">5年</button>
-                    <button data-filter-type="grade" data-filter="6年"
+                    <button type="button" data-filter-type="grade" data-filter="6年"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">6年</button>
-                    <button data-filter-type="grade" data-filter="全学年"
+                    <button type="button" data-filter-type="grade" data-filter="全学年"
                         class="filter-btn px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-slate-200/90 bg-white text-slate-600 shadow-sm">全学年</button>
                 </div>
             </div>
@@ -706,7 +718,7 @@
             <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1 px-1">
                 <div class="text-xs font-semibold text-slate-500 flex items-center gap-2">
                     <span id="appCountBadge"
-                        class="inline-flex items-center px-2.5 py-1 rounded-full bg-white/80 border border-slate-200/80 text-slate-700 shadow-sm">
+                        class="inline-flex items-center px-2.5 py-1 rounded-full bg-white/85 border border-slate-200/80 text-slate-700 shadow-sm">
                         読み込み中...
                     </span>
                 </div>
@@ -754,9 +766,9 @@
 
                 <!-- ステージ下部インジケーター -->
                 <div class="mt-4 flex flex-col items-center gap-3">
-                    <div class="flex items-center gap-3">
+                    <div class="flex flex-wrap items-center justify-center gap-2.5">
                         <span id="stageCounter"
-                            class="text-xs font-extrabold px-3 py-1 rounded-full bg-white/90 border border-slate-200/90 text-slate-700 shadow-sm">
+                            class="text-xs font-extrabold px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-700 shadow-sm">
                             0 / 0
                         </span>
                         <a id="stageOpenDirectBtn" href="#" target="_blank" rel="noopener noreferrer"
@@ -764,6 +776,18 @@
                             <span>選択中のアプリを開く</span>
                             <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
                         </a>
+                        <div id="stageAdminActions" class="hidden items-center gap-1.5">
+                            <button type="button" id="stageEditBtn"
+                                class="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-200 shadow-sm transition">
+                                <i class="fa-solid fa-pen text-[10px]"></i>
+                                <span>編集</span>
+                            </button>
+                            <button type="button" id="stageDeleteBtn"
+                                class="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600 hover:text-rose-600 hover:border-rose-200 shadow-sm transition">
+                                <i class="fa-solid fa-trash-can text-[10px]"></i>
+                                <span>削除</span>
+                            </button>
+                        </div>
                     </div>
                     <div id="stageDots" class="flex flex-wrap items-center justify-center gap-1.5 max-w-lg px-4"></div>
                     <p class="text-[11px] text-slate-400 text-center">
@@ -775,40 +799,40 @@
 
         <!-- 該当なし表示 -->
         <div id="noResults"
-            class="hidden text-center py-16 text-slate-500 bg-white/60 backdrop-blur rounded-3xl border border-white max-w-lg mx-auto shadow-sm">
+            class="hidden text-center py-16 text-slate-500 bg-white/75 backdrop-blur rounded-3xl border border-white max-w-lg mx-auto shadow-sm">
             <i class="fa-regular fa-face-frown text-4xl mb-3 text-slate-400"></i>
             <p class="mt-1 font-semibold text-slate-600">条件に合うアプリが見つかりませんでした</p>
             <p class="text-xs text-slate-400 mt-1">検索ワードやフィルター条件を変更してみてください</p>
         </div>
     </main>
 
-    <footer class="bg-white/70 backdrop-blur border-t border-slate-200/70 mt-14">
+    <footer class="bg-white/75 backdrop-blur border-t border-slate-200/70 mt-14">
         <div class="max-w-6xl mx-auto px-4 py-8 text-center text-slate-500 text-sm">
             &copy; 2024 My Portfolio. All rights reserved.
         </div>
     </footer>
 
     <!-- 管理者用：新規追加フローティングボタン -->
-    <button id="addAppBtn"
-        class="fixed bottom-8 right-8 bg-gradient-to-br from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white w-14 h-14 rounded-full shadow-xl shadow-blue-600/30 flex items-center justify-center text-2xl transition transform hover:scale-110 z-50 focus:outline-none focus:ring-4 focus:ring-blue-300"
+    <button type="button" id="addAppBtn"
+        class="hidden fixed bottom-8 right-8 bg-gradient-to-br from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white w-14 h-14 rounded-full shadow-xl shadow-blue-600/30 flex items-center justify-center text-2xl transition transform hover:scale-105 z-40 focus:outline-none focus:ring-4 focus:ring-blue-300"
         title="新しいアプリを追加" aria-label="新しいアプリを追加">
         <i class="fa-solid fa-plus"></i>
     </button>
 
-    <!-- 追加・編集モーダル -->
+    <!-- 追加・編集モーダル（transformやbackdrop-filterを使わずテキスト選択・カーソル位置を100%正確に維持） -->
     <div id="modal"
-        class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50"
+        class="modal opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center z-50 p-4"
         aria-hidden="true" role="dialog" aria-labelledby="modalTitle">
-        <div class="modal-overlay absolute w-full h-full bg-slate-900/45 backdrop-blur-sm"></div>
+        <div id="modalOverlay" class="modal-overlay fixed inset-0 bg-slate-900/50"></div>
 
-        <div
-            class="modal-container bg-white/95 backdrop-blur-xl border border-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-2xl z-50 overflow-y-auto max-h-[90vh] transform transition-transform scale-95">
+        <div id="modalContainer"
+            class="modal-container relative bg-white border border-slate-200 w-full max-w-md mx-auto rounded-2xl shadow-2xl z-10 overflow-y-auto max-h-[90vh]">
 
             <div class="modal-content py-5 text-left px-6">
                 <div class="flex justify-between items-center pb-3 border-b border-slate-100">
                     <p id="modalTitle" class="text-xl font-extrabold text-slate-800">アプリを追加</p>
-                    <button
-                        class="modal-close cursor-pointer z-50 text-slate-400 hover:text-slate-700 p-2 focus:outline-none focus:ring-2 focus:ring-slate-300 rounded-lg"
+                    <button type="button"
+                        class="modal-close cursor-pointer text-slate-400 hover:text-slate-700 p-2 focus:outline-none focus:ring-2 focus:ring-slate-300 rounded-lg"
                         aria-label="閉じる">
                         <i class="fa-solid fa-times text-lg"></i>
                     </button>
@@ -820,19 +844,33 @@
                         <label class="block text-slate-700 text-sm font-bold mb-1.5" for="appName">アプリ名 <span
                                 class="text-red-500">*</span></label>
                         <input
-                            class="shadow-sm appearance-none border border-slate-200 rounded-xl w-full py-2.5 px-3.5 text-slate-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                            class="shadow-sm appearance-none border border-slate-200 rounded-xl w-full py-2.5 px-3.5 text-slate-800 leading-normal focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-white"
                             id="appName" type="text" placeholder="例: Todoリスト">
                     </div>
                     <div>
-                        <label class="block text-slate-700 text-sm font-bold mb-1.5" for="appUrl">URL <span
-                                class="text-red-500">*</span> <span
-                                class="text-xs text-slate-400 font-normal">(http/https)</span></label>
-                        <input
-                            class="shadow-sm appearance-none border border-slate-200 rounded-xl w-full py-2.5 px-3.5 text-slate-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                            id="appUrl" type="url" placeholder="https://example.com">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-slate-700 text-sm font-bold" for="appUrl">URL <span
+                                    class="text-red-500">*</span> <span
+                                    class="text-xs text-slate-400 font-normal">(http/https)</span></label>
+                            <button type="button" id="clearUrlTextBtn"
+                                class="hidden text-xs text-slate-400 hover:text-rose-600 font-medium transition-colors">
+                                URLを消去
+                            </button>
+                        </div>
+                        <div class="relative">
+                            <input
+                                class="shadow-sm appearance-none border border-slate-200 rounded-xl w-full py-2.5 pl-3.5 pr-9 text-slate-800 leading-normal focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-white font-mono text-sm"
+                                id="appUrl" type="text" inputmode="url" spellcheck="false" autocomplete="off"
+                                autocapitalize="off" placeholder="https://example.com">
+                            <button type="button" id="clearUrlBtn"
+                                class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors"
+                                title="URLをクリア" aria-label="URLをクリア">
+                                <i class="fa-solid fa-circle-xmark text-base"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="pt-1 pb-2.5 border-b border-slate-100">
-                        <label class="flex items-center cursor-pointer">
+                        <label class="inline-flex items-center cursor-pointer select-none">
                             <div class="relative">
                                 <input type="checkbox" id="appIsPublic" class="sr-only" checked>
                                 <div class="block bg-blue-500 w-10 h-6 rounded-full transition-colors duration-200 ease-in-out"
@@ -850,15 +888,16 @@
                     <div>
                         <label class="block text-slate-700 text-sm font-bold mb-1.5" for="appDesc">説明</label>
                         <textarea
-                            class="shadow-sm appearance-none border border-slate-200 rounded-xl w-full py-2.5 px-3.5 text-slate-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                            class="shadow-sm appearance-none border border-slate-200 rounded-xl w-full py-2.5 px-3.5 text-slate-800 leading-normal focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-white"
                             id="appDesc" rows="3" placeholder="簡単な説明を入力"></textarea>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-slate-700 text-sm font-bold mb-1.5">カテゴリ</label>
+                            <label class="block text-slate-700 text-sm font-bold mb-1.5"
+                                for="appCategory">カテゴリ</label>
                             <select id="appCategory"
-                                class="shadow-sm border border-slate-200 rounded-xl w-full py-2.5 px-3 text-slate-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-white">
+                                class="shadow-sm border border-slate-200 rounded-xl w-full py-2.5 px-3 text-slate-800 leading-normal focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-white">
                                 <option value="Tool">Tool</option>
                                 <option value="Game">Game</option>
                                 <option value="Web">Web</option>
@@ -867,9 +906,9 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-slate-700 text-sm font-bold mb-1.5">教科</label>
+                            <label class="block text-slate-700 text-sm font-bold mb-1.5" for="appSubject">教科</label>
                             <select id="appSubject"
-                                class="shadow-sm border border-slate-200 rounded-xl w-full py-2.5 px-3 text-slate-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-white">
+                                class="shadow-sm border border-slate-200 rounded-xl w-full py-2.5 px-3 text-slate-800 leading-normal focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-white">
                                 <option value="">― 選択しない ―</option>
                                 <option value="国語">国語</option>
                                 <option value="算数">算数</option>
@@ -890,9 +929,9 @@
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-slate-700 text-sm font-bold mb-1.5">対象学年</label>
+                            <label class="block text-slate-700 text-sm font-bold mb-1.5" for="appGrade">対象学年</label>
                             <select id="appGrade"
-                                class="shadow-sm border border-slate-200 rounded-xl w-full py-2.5 px-3 text-slate-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-white">
+                                class="shadow-sm border border-slate-200 rounded-xl w-full py-2.5 px-3 text-slate-800 leading-normal focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-white">
                                 <option value="">― 選択しない ―</option>
                                 <option value="1年">1年</option>
                                 <option value="2年">2年</option>
@@ -904,9 +943,9 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-slate-700 text-sm font-bold mb-1.5">アイコン</label>
+                            <label class="block text-slate-700 text-sm font-bold mb-1.5" for="appIcon">アイコン</label>
                             <select id="appIcon"
-                                class="shadow-sm border border-slate-200 rounded-xl w-full py-2.5 px-3 text-slate-700 leading-tight focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-white">
+                                class="shadow-sm border border-slate-200 rounded-xl w-full py-2.5 px-3 text-slate-800 leading-normal focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-white">
                                 <option value="fa-cube">Cube (基本)</option>
                                 <option value="fa-check-circle">Check (Todo)</option>
                                 <option value="fa-gamepad">Gamepad (ゲーム)</option>
@@ -950,10 +989,10 @@
                 </div>
 
                 <div class="flex justify-end pt-2 gap-2.5">
-                    <button id="cancelBtn"
+                    <button type="button" id="cancelBtn"
                         class="px-4 py-2.5 bg-slate-100 rounded-xl text-slate-700 hover:bg-slate-200 font-semibold transition focus:outline-none focus:ring-2 focus:ring-slate-300">キャンセル</button>
-                    <button id="saveBtn"
-                        class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl text-white hover:from-blue-700 hover:to-indigo-700 font-semibold shadow-md shadow-blue-500/25 transition transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500">保存する</button>
+                    <button type="button" id="saveBtn"
+                        class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl text-white hover:from-blue-700 hover:to-indigo-700 font-semibold shadow-md shadow-blue-500/25 transition active:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500">保存する</button>
                 </div>
             </div>
         </div>
@@ -988,42 +1027,41 @@
         const APPS_COLLECTION = "portfolio_apps";
         const ADMIN_EMAIL = "d.a0807derude@gmail.com";
 
-        // テーマカラーごとの立体グラデーション＆発光カラー定義
         const COLOR_PALETTES = {
             'bg-blue-500': {
                 iconBg: 'bg-gradient-to-br from-blue-500 to-indigo-600',
                 barBg: 'bg-gradient-to-r from-blue-500 via-indigo-500 to-sky-400',
-                glow: 'rgba(59, 130, 246, 0.30)',
+                glow: 'rgba(59, 130, 246, 0.28)',
                 accent: '#2563eb'
             },
             'bg-purple-500': {
                 iconBg: 'bg-gradient-to-br from-purple-500 to-fuchsia-600',
                 barBg: 'bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-400',
-                glow: 'rgba(168, 85, 247, 0.30)',
+                glow: 'rgba(168, 85, 247, 0.28)',
                 accent: '#9333ea'
             },
             'bg-emerald-500': {
                 iconBg: 'bg-gradient-to-br from-emerald-500 to-teal-600',
                 barBg: 'bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-500',
-                glow: 'rgba(16, 185, 129, 0.30)',
+                glow: 'rgba(16, 185, 129, 0.28)',
                 accent: '#059669'
             },
             'bg-orange-400': {
                 iconBg: 'bg-gradient-to-br from-amber-400 to-orange-500',
                 barBg: 'bg-gradient-to-r from-amber-400 via-orange-500 to-rose-400',
-                glow: 'rgba(251, 146, 60, 0.34)',
+                glow: 'rgba(251, 146, 60, 0.32)',
                 accent: '#ea580c'
             },
             'bg-rose-500': {
                 iconBg: 'bg-gradient-to-br from-rose-500 to-pink-600',
                 barBg: 'bg-gradient-to-r from-rose-500 via-pink-500 to-orange-400',
-                glow: 'rgba(244, 63, 94, 0.30)',
+                glow: 'rgba(244, 63, 94, 0.28)',
                 accent: '#e11d48'
             },
             'bg-gray-700': {
                 iconBg: 'bg-gradient-to-br from-slate-600 to-slate-800',
                 barBg: 'bg-gradient-to-r from-slate-600 via-slate-700 to-indigo-500',
-                glow: 'rgba(71, 85, 105, 0.28)',
+                glow: 'rgba(71, 85, 105, 0.26)',
                 accent: '#334155'
             }
         };
@@ -1062,14 +1100,18 @@
         const stageCounter = document.getElementById('stageCounter');
         const stageDots = document.getElementById('stageDots');
         const stageOpenDirectBtn = document.getElementById('stageOpenDirectBtn');
+        const stageAdminActions = document.getElementById('stageAdminActions');
+        const stageEditBtn = document.getElementById('stageEditBtn');
+        const stageDeleteBtn = document.getElementById('stageDeleteBtn');
         const noResults = document.getElementById('noResults');
         const addAppBtn = document.getElementById('addAppBtn');
         const appCountBadge = document.getElementById('appCountBadge');
         const viewSwitcher = document.getElementById('viewSwitcher');
         const viewGridBtn = document.getElementById('viewGridBtn');
         const viewStageBtn = document.getElementById('viewStageBtn');
-
-        const headerRight = document.querySelector('header .flex.items-center.gap-4');
+        const headerAuthArea = document.getElementById('headerAuthArea');
+        const searchInput = document.getElementById('searchInput');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
 
         const loadingMsg = document.createElement('div');
         loadingMsg.className = "col-span-full text-center py-14 text-slate-500";
@@ -1082,8 +1124,8 @@
             const authContainer = document.createElement('div');
             authContainer.className = "flex items-center gap-3";
 
-            headerRight.innerHTML = '';
-            headerRight.appendChild(authContainer);
+            headerAuthArea.innerHTML = '';
+            headerAuthArea.appendChild(authContainer);
 
             onAuthStateChanged(auth, (user) => {
                 state.currentUser = user;
@@ -1092,7 +1134,7 @@
                 renderAuthUI(authContainer);
                 updateAdminUI();
                 if (state.isLoaded) {
-                    renderApps({ animateMode: 'quick' });
+                    renderApps({ animateMode: 'none' });
                 }
             });
         }
@@ -1115,13 +1157,15 @@
                 container.appendChild(emailLabel);
 
                 const logoutBtn = document.createElement('button');
-                logoutBtn.className = "text-xs text-slate-600 hover:text-red-500 transition-colors border border-slate-200 px-3 py-1.5 rounded-full bg-white/80 shadow-sm";
+                logoutBtn.type = 'button';
+                logoutBtn.className = "text-xs text-slate-600 hover:text-red-500 transition-colors border border-slate-200 px-3 py-1.5 rounded-full bg-white shadow-sm";
                 logoutBtn.textContent = "ログアウト";
                 logoutBtn.onclick = () => signOut(auth);
                 container.append(logoutBtn);
 
                 if (state.isAdmin) {
                     const sampleBtn = document.createElement('button');
+                    sampleBtn.type = 'button';
                     sampleBtn.id = "resetButton";
                     sampleBtn.className = "text-xs text-slate-400 hover:text-blue-600 underline transition-colors ml-1";
                     sampleBtn.textContent = "サンプル追加";
@@ -1130,6 +1174,7 @@
                 }
             } else {
                 const loginBtn = document.createElement('button');
+                loginBtn.type = 'button';
                 loginBtn.className = "bg-slate-900 text-white text-xs px-4 py-2 rounded-full hover:bg-slate-700 transition-colors shadow-sm font-semibold";
                 loginBtn.innerHTML = '<i class="fa-brands fa-google mr-2"></i>管理者ログイン';
                 loginBtn.onclick = async () => {
@@ -1171,7 +1216,7 @@
                 }));
 
                 if (loadingMsg.parentNode) loadingMsg.parentNode.removeChild(loadingMsg);
-                renderApps({ animateMode: firstLoad ? 'deal' : 'quick' });
+                renderApps({ animateMode: firstLoad ? 'deal' : 'none' });
             }, (error) => {
                 console.error("Firestore Error:", error);
                 if (loadingMsg.parentNode) loadingMsg.parentNode.removeChild(loadingMsg);
@@ -1221,7 +1266,10 @@
         async function deleteFromFirestore(id) {
             if (!state.isAdmin) return alert("権限がありません");
 
-            if (confirm('このアプリを削除しますか？\n(クラウド上のデータも削除されます)')) {
+            const target = state.apps.find(a => a.id === id);
+            const label = target ? `「${target.name}」` : 'このアプリ';
+
+            if (confirm(`${label}を削除しますか？\n(クラウド上のデータも削除されます)`)) {
                 try {
                     await deleteDoc(doc(db, APPS_COLLECTION, id));
                 } catch (error) {
@@ -1248,7 +1296,7 @@
         }
 
         // ========================================================
-        //  3Dカード生成 ＆ チルト・グレア制御
+        //  3Dカード生成 ＆ なめらか補間チルト制御
         // ========================================================
 
         function normalizeUrl(input) {
@@ -1262,12 +1310,20 @@
         }
 
         function getFilteredApps() {
-            const searchText = state.searchQuery.toLowerCase();
+            const searchText = state.searchQuery.trim().toLowerCase();
             return state.apps.filter(app => {
                 const isAppPublic = app.isPublic !== false;
                 if (!state.isAdmin && !isAppPublic) return false;
 
-                const matchesText = (app.name + (app.description || "") + app.category).toLowerCase().includes(searchText);
+                const searchable = [
+                    app.name || '',
+                    app.description || '',
+                    app.category || '',
+                    app.subject || '',
+                    app.grade || ''
+                ].join(' ').toLowerCase();
+
+                const matchesText = !searchText || searchable.includes(searchText);
                 const matchesCategory = state.filter === 'All' || app.category === state.filter;
                 const matchesSubject = state.subjectFilter === 'All' || app.subject === state.subjectFilter;
                 const matchesGrade = state.gradeFilter === 'All' || app.grade === state.gradeFilter;
@@ -1275,49 +1331,106 @@
             });
         }
 
-        function attachCardTilt(sceneEl, cardBody, isActiveChecker = () => true) {
-            if (!supportsHoverTilt || prefersReducedMotion) return;
+        function attachCardTilt(shellEl, cardBody, isActiveChecker = () => true) {
+            let targetRx = 0, targetRy = 0, targetTz = 0;
+            let currentRx = 0, currentRy = 0, currentTz = 0;
+            let rafId = null;
+            let pausedByActionBtn = false;
 
-            sceneEl.addEventListener('pointerenter', () => {
-                if (!isActiveChecker()) return;
-                cardBody.classList.add('is-tilting');
-            });
+            const step = () => {
+                currentRx += (targetRx - currentRx) * 0.18;
+                currentRy += (targetRy - currentRy) * 0.18;
+                currentTz += (targetTz - currentTz) * 0.18;
 
-            sceneEl.addEventListener('pointermove', (e) => {
-                if (!isActiveChecker()) return;
-                const rect = sceneEl.getBoundingClientRect();
-                if (!rect.width || !rect.height) return;
+                const shadowX = (-currentRy * 1.1).toFixed(1);
+                const shadowY = (20 + currentRx * 0.8).toFixed(1);
 
-                const px = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
-                const py = Math.min(Math.max((e.clientY - rect.top) / rect.height, 0), 1);
-
-                const rotY = (px - 0.5) * 20; // 左右最大 ±10deg
-                const rotX = (0.5 - py) * 18; // 上下最大 ±9deg
-                const shadowX = (-rotY * 1.15).toFixed(1);
-                const shadowY = (22 + rotX * 0.85).toFixed(1);
-
-                cardBody.style.setProperty('--rx', `${rotX.toFixed(2)}deg`);
-                cardBody.style.setProperty('--ry', `${rotY.toFixed(2)}deg`);
-                cardBody.style.setProperty('--tz', '10px');
-                cardBody.style.setProperty('--mx', `${(px * 100).toFixed(1)}%`);
-                cardBody.style.setProperty('--my', `${(py * 100).toFixed(1)}%`);
-                cardBody.style.setProperty('--glare-alpha', '1');
+                cardBody.style.setProperty('--rx', `${currentRx.toFixed(2)}deg`);
+                cardBody.style.setProperty('--ry', `${currentRy.toFixed(2)}deg`);
+                cardBody.style.setProperty('--tz', `${currentTz.toFixed(2)}px`);
                 cardBody.style.setProperty('--shadow-x', `${shadowX}px`);
                 cardBody.style.setProperty('--shadow-y', `${shadowY}px`);
-            });
 
-            const resetTilt = () => {
-                cardBody.classList.remove('is-tilting');
-                cardBody.style.setProperty('--rx', '0deg');
-                cardBody.style.setProperty('--ry', '0deg');
-                cardBody.style.setProperty('--tz', '0px');
-                cardBody.style.setProperty('--glare-alpha', '0');
-                cardBody.style.setProperty('--shadow-x', '0px');
-                cardBody.style.setProperty('--shadow-y', '20px');
+                const settled =
+                    Math.abs(targetRx - currentRx) < 0.04 &&
+                    Math.abs(targetRy - currentRy) < 0.04 &&
+                    Math.abs(targetTz - currentTz) < 0.08;
+
+                if (settled) {
+                    currentRx = targetRx;
+                    currentRy = targetRy;
+                    currentTz = targetTz;
+                    cardBody.style.setProperty('--rx', `${currentRx.toFixed(2)}deg`);
+                    cardBody.style.setProperty('--ry', `${currentRy.toFixed(2)}deg`);
+                    cardBody.style.setProperty('--tz', `${currentTz.toFixed(2)}px`);
+                    rafId = null;
+                } else {
+                    rafId = requestAnimationFrame(step);
+                }
             };
 
-            sceneEl.addEventListener('pointerleave', resetTilt);
-            sceneEl.addEventListener('pointercancel', resetTilt);
+            const ensureLoop = () => {
+                if (!rafId) rafId = requestAnimationFrame(step);
+            };
+
+            const resetTilt = () => {
+                targetRx = 0;
+                targetRy = 0;
+                targetTz = 0;
+                cardBody.style.setProperty('--glare-alpha', '0');
+                ensureLoop();
+            };
+
+            if (supportsHoverTilt && !prefersReducedMotion) {
+                shellEl.addEventListener('pointermove', (e) => {
+                    if (!isActiveChecker() || pausedByActionBtn) return;
+                    const rect = shellEl.getBoundingClientRect();
+                    if (!rect.width || !rect.height) return;
+
+                    const px = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
+                    const py = Math.min(Math.max((e.clientY - rect.top) / rect.height, 0), 1);
+
+                    targetRy = (px - 0.5) * 14; // 最大 ±7deg（読みやすく自然な立体感）
+                    targetRx = (0.5 - py) * 12; // 最大 ±6deg
+                    targetTz = 5;
+
+                    cardBody.style.setProperty('--mx', `${(px * 100).toFixed(1)}%`);
+                    cardBody.style.setProperty('--my', `${(py * 100).toFixed(1)}%`);
+                    cardBody.style.setProperty('--glare-alpha', '1');
+                    ensureLoop();
+                });
+
+                shellEl.addEventListener('pointerleave', () => {
+                    pausedByActionBtn = false;
+                    resetTilt();
+                });
+
+                shellEl.addEventListener('pointercancel', () => {
+                    pausedByActionBtn = false;
+                    resetTilt();
+                });
+            }
+
+            return {
+                setActionHover(isHovering) {
+                    pausedByActionBtn = isHovering;
+                    if (isHovering) resetTilt();
+                },
+                resetImmediate() {
+                    if (rafId) {
+                        cancelAnimationFrame(rafId);
+                        rafId = null;
+                    }
+                    targetRx = targetRy = targetTz = 0;
+                    currentRx = currentRy = currentTz = 0;
+                    cardBody.style.setProperty('--rx', '0deg');
+                    cardBody.style.setProperty('--ry', '0deg');
+                    cardBody.style.setProperty('--tz', '0px');
+                    cardBody.style.setProperty('--glare-alpha', '0');
+                    cardBody.style.setProperty('--shadow-x', '0px');
+                    cardBody.style.setProperty('--shadow-y', '20px');
+                }
+            };
         }
 
         function create3DCardElement(app, options = {}) {
@@ -1326,15 +1439,18 @@
             const iconName = app.icon || 'fa-cube';
             const isAppPublic = app.isPublic !== false;
 
+            const shell = document.createElement('div');
+            shell.className = "card-item-shell group";
+
             const scene = document.createElement('div');
-            scene.className = "card-3d-scene relative group";
+            scene.className = forStage ? "card-3d-scene--stage" : "card-3d-scene";
 
             const body = document.createElement('div');
             body.className = "card-3d-body";
             body.style.setProperty('--accent-color', palette.accent);
             body.style.setProperty('--accent-glow', palette.glow);
 
-            // 1. 背面厚みプレート (Z = -7px)
+            // 1. 背面厚みプレート (Z = -6px)
             const backplate = document.createElement('div');
             backplate.className = "card-3d-backplate";
 
@@ -1365,9 +1481,11 @@
             link.draggable = false;
             link.className = "card-3d-content focus:outline-none";
 
-            // 上段：立体アイコン ＋ カテゴリ/非公開バッジ
+            // 上段：立体アイコン ＋ カテゴリ/非公開バッジ（管理者時は右上ボタン分の余白を確保）
             const headerDiv = document.createElement('div');
-            headerDiv.className = "flex items-start justify-between mb-4";
+            headerDiv.className = state.isAdmin
+                ? "flex items-start justify-between mb-4 pr-20"
+                : "flex items-start justify-between mb-4";
 
             const iconDiv = document.createElement('div');
             iconDiv.className = `layer-z-icon icon-3d-box w-12 h-12 rounded-2xl ${palette.iconBg} text-white flex items-center justify-center text-xl shrink-0`;
@@ -1378,7 +1496,7 @@
 
             const catSpan = document.createElement('span');
             catSpan.className = "text-[11px] font-bold px-2.5 py-1 bg-slate-100/95 text-slate-600 rounded-full border border-slate-200/80 shadow-sm";
-            catSpan.textContent = app.category;
+            catSpan.textContent = app.category || 'Tool';
             tagContainer.appendChild(catSpan);
 
             if (state.isAdmin && !isAppPublic) {
@@ -1392,7 +1510,7 @@
 
             // タイトル
             const title = document.createElement('h3');
-            title.className = "layer-z-title text-lg font-extrabold text-slate-900 group-hover:text-blue-600 transition-colors mb-2 pr-10 break-words leading-snug";
+            title.className = "layer-z-title text-lg font-extrabold text-slate-900 group-hover:text-blue-600 transition-colors mb-2 break-words leading-snug";
             title.textContent = app.name;
 
             // 教科・学年バッジ
@@ -1429,38 +1547,47 @@
             }
 
             body.append(backplate, surface, link);
+            scene.appendChild(body);
+            shell.appendChild(scene);
 
-            // 管理者用 編集・削除ボタン（Z = 48pxで手前に配置）
+            const tiltController = attachCardTilt(
+                shell,
+                body,
+                options.isActiveChecker || (() => true)
+            );
+
+            // 管理者用 編集・削除ボタン（3D変換ツリーの「外」に配置し、ホバー時はカードの傾きを水平に固定）
             if (state.isAdmin) {
                 const actionsDiv = document.createElement('div');
-                actionsDiv.className = "layer-z-admin absolute top-3 right-3 z-30 flex gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200";
+                actionsDiv.className = "card-admin-actions opacity-100 sm:opacity-85 sm:group-hover:opacity-100 transition-opacity duration-150";
+
+                actionsDiv.addEventListener('pointerenter', () => tiltController.setActionHover(true));
+                actionsDiv.addEventListener('pointerleave', () => tiltController.setActionHover(false));
 
                 const createBtn = (icon, btnTitle, hoverClass, handler) => {
                     const btn = document.createElement('button');
                     btn.type = 'button';
-                    btn.className = `w-8 h-8 bg-white/95 text-slate-500 rounded-full ${hoverClass} flex items-center justify-center shadow-md border border-slate-200 transition-colors`;
+                    btn.className = `w-8 h-8 bg-white text-slate-600 rounded-full ${hoverClass} flex items-center justify-center shadow-md border border-slate-200 transition-colors cursor-pointer`;
                     btn.title = btnTitle;
-                    btn.innerHTML = `<i class="fa-solid ${icon} text-xs"></i>`;
-                    btn.onclick = (e) => {
+                    btn.setAttribute('aria-label', btnTitle);
+                    btn.innerHTML = `<i class="fa-solid ${icon} text-xs pointer-events-none"></i>`;
+                    btn.addEventListener('pointerdown', (e) => {
+                        e.stopPropagation();
+                    });
+                    btn.addEventListener('click', (e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         handler();
-                    };
+                    });
                     return btn;
                 };
 
-                actionsDiv.appendChild(createBtn('fa-pen', '編集', 'hover:bg-blue-50 hover:text-blue-600', () => openModal(app.id)));
-                actionsDiv.appendChild(createBtn('fa-trash-can', '削除', 'hover:bg-rose-50 hover:text-rose-600', () => deleteFromFirestore(app.id)));
-                body.appendChild(actionsDiv);
+                actionsDiv.appendChild(createBtn('fa-pen', '編集', 'hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200', () => openModal(app.id)));
+                actionsDiv.appendChild(createBtn('fa-trash-can', '削除', 'hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200', () => deleteFromFirestore(app.id)));
+                shell.appendChild(actionsDiv);
             }
 
-            scene.appendChild(body);
-
-            if (!forStage) {
-                attachCardTilt(scene, body);
-            }
-
-            return { scene, body, link, palette };
+            return { shell, scene, body, link, palette, tiltController };
         }
 
         // ========================================================
@@ -1481,9 +1608,10 @@
             if (state.viewMode === 'grid' && grid.children.length > 0) {
                 grid.classList.add('grid-exiting');
                 transitionTimer = setTimeout(() => {
+                    transitionTimer = null;
                     grid.classList.remove('grid-exiting');
                     renderApps({ animateMode: 'deal' });
-                }, 155);
+                }, 145);
             } else {
                 state.activeSlideIndex = 0;
                 renderApps({ animateMode: 'deal' });
@@ -1519,24 +1647,30 @@
         }
 
         function renderGridMode(filteredApps, animateMode) {
+            grid.classList.remove('grid-exiting');
             grid.innerHTML = '';
 
             filteredApps.forEach((app, index) => {
                 const wrapper = document.createElement('div');
-                const animClass = animateMode === 'deal' ? 'grid-card-enter' : 'grid-card-quick';
-                wrapper.className = `grid-card-wrapper h-full ${animClass}`;
+                let animClass = '';
+                if (animateMode === 'deal') animClass = 'grid-card-enter';
+                else if (animateMode === 'quick') animClass = 'grid-card-quick';
+
+                wrapper.className = `grid-card-wrapper h-full ${animClass}`.trim();
 
                 if (animateMode === 'deal') {
-                    const delay = Math.min(index * 48, 480);
+                    const delay = Math.min(index * 38, 340);
                     wrapper.style.setProperty('--stagger', `${delay}ms`);
                 }
 
-                wrapper.addEventListener('animationend', () => {
-                    wrapper.classList.remove('grid-card-enter', 'grid-card-quick');
-                }, { once: true });
+                if (animClass) {
+                    const cleanup = () => wrapper.classList.remove('grid-card-enter', 'grid-card-quick');
+                    wrapper.addEventListener('animationend', cleanup, { once: true });
+                    setTimeout(cleanup, 950);
+                }
 
-                const { scene } = create3DCardElement(app, { forStage: false });
-                wrapper.appendChild(scene);
+                const { shell } = create3DCardElement(app, { forStage: false });
+                wrapper.appendChild(shell);
                 grid.appendChild(wrapper);
             });
         }
@@ -1569,13 +1703,13 @@
                 const slideItem = document.createElement('div');
                 slideItem.className = "stage-slide-item";
 
-                const { scene, body, link, palette } = create3DCardElement(app, { forStage: true });
+                const { shell, body, link, palette, tiltController } = create3DCardElement(app, {
+                    forStage: true,
+                    isActiveChecker: () => state.activeSlideIndex === index
+                });
 
                 const reflection = document.createElement('div');
                 reflection.className = "stage-card-reflection";
-
-                // 中央カードのときだけマウス追従3Dチルトを有効化
-                attachCardTilt(scene, body, () => state.activeSlideIndex === index);
 
                 // 脇のカードをクリックしたら中央へスライド、中央カードならリンク起動
                 link.addEventListener('click', (e) => {
@@ -1589,10 +1723,9 @@
                     }
                 });
 
-                slideItem.append(scene, reflection);
+                slideItem.append(shell, reflection);
                 stageTrack.appendChild(slideItem);
 
-                // ドットインジケーター（最大24件までドット表示）
                 let dotBtn = null;
                 if (filteredApps.length <= 24) {
                     dotBtn = document.createElement('button');
@@ -1603,7 +1736,7 @@
                     stageDots.appendChild(dotBtn);
                 }
 
-                stageItemsCache.push({ slideItem, body, app, palette, dotBtn });
+                stageItemsCache.push({ slideItem, body, app, palette, dotBtn, tiltController });
             });
 
             updateStagePositions();
@@ -1611,7 +1744,11 @@
 
         function updateStagePositions() {
             const total = stageItemsCache.length;
-            if (total === 0) return;
+            if (total === 0) {
+                stageAdminActions.classList.add('hidden');
+                stageAdminActions.classList.remove('inline-flex');
+                return;
+            }
 
             const activeIdx = state.activeSlideIndex;
             const isCompact = window.innerWidth < 640;
@@ -1625,10 +1762,7 @@
                 const el = item.slideItem;
 
                 if (offset !== 0) {
-                    item.body.style.setProperty('--rx', '0deg');
-                    item.body.style.setProperty('--ry', '0deg');
-                    item.body.style.setProperty('--tz', '0px');
-                    item.body.style.setProperty('--glare-alpha', '0');
+                    item.tiltController.resetImmediate();
                 }
 
                 if (offset === 0) {
@@ -1642,6 +1776,16 @@
                     stageFloorGlow.style.setProperty('--stage-glow', item.palette.glow);
                     stageCounter.textContent = `${activeIdx + 1} / ${total}`;
                     stageOpenDirectBtn.href = item.app.url;
+
+                    if (state.isAdmin) {
+                        stageAdminActions.classList.remove('hidden');
+                        stageAdminActions.classList.add('inline-flex');
+                        stageEditBtn.onclick = () => openModal(item.app.id);
+                        stageDeleteBtn.onclick = () => deleteFromFirestore(item.app.id);
+                    } else {
+                        stageAdminActions.classList.add('hidden');
+                        stageAdminActions.classList.remove('inline-flex');
+                    }
                 } else if (absOffset <= 3) {
                     el.classList.remove('is-center');
                     el.style.visibility = 'visible';
@@ -1682,7 +1826,7 @@
             updateStagePositions();
         }
 
-        // ステージ操作イベント（矢印ボタン・スワイプ・ドラッグ・キーボード・横ホイール）
+        // ステージ操作イベント（領域外でマウスを離しても状態が残らないようwindowで解放）
         document.getElementById('stagePrevBtn').addEventListener('click', () => {
             goToSlide(state.activeSlideIndex - 1);
         });
@@ -1701,13 +1845,14 @@
             suppressNextStageClick = false;
         });
 
-        stageViewport.addEventListener('pointerup', (e) => {
+        window.addEventListener('pointerup', (e) => {
             if (dragStartX === null) return;
             const dx = e.clientX - dragStartX;
             const dy = e.clientY - dragStartY;
             dragStartX = null;
             dragStartY = null;
 
+            if (state.viewMode !== 'stage') return;
             if (Math.abs(dx) > 42 && Math.abs(dx) > Math.abs(dy)) {
                 suppressNextStageClick = true;
                 if (dx < 0) {
@@ -1715,8 +1860,13 @@
                 } else {
                     goToSlide(state.activeSlideIndex - 1);
                 }
-                setTimeout(() => { suppressNextStageClick = false; }, 80);
+                setTimeout(() => { suppressNextStageClick = false; }, 100);
             }
+        });
+
+        window.addEventListener('pointercancel', () => {
+            dragStartX = null;
+            dragStartY = null;
         });
 
         let lastWheelStepAt = 0;
@@ -1735,8 +1885,14 @@
         }, { passive: false });
 
         window.addEventListener('keydown', (e) => {
+            if (document.body.classList.contains('modal-active')) {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeModal();
+                }
+                return;
+            }
             if (state.viewMode !== 'stage') return;
-            if (document.body.classList.contains('modal-active')) return;
             const tag = document.activeElement?.tagName;
             if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
@@ -1760,6 +1916,12 @@
         // --------------------------------------------------------
         function setViewMode(mode) {
             if (state.viewMode === mode) return;
+            if (transitionTimer) {
+                clearTimeout(transitionTimer);
+                transitionTimer = null;
+            }
+            grid.classList.remove('grid-exiting');
+
             state.viewMode = mode;
             viewSwitcher.dataset.mode = mode;
 
@@ -1784,10 +1946,28 @@
         // --------------------------------------------------------
         // 検索・フィルターイベント
         // --------------------------------------------------------
-        document.getElementById('searchInput').addEventListener('input', (e) => {
+        function syncClearSearchBtn() {
+            if (searchInput.value.length > 0) {
+                clearSearchBtn.classList.remove('hidden');
+            } else {
+                clearSearchBtn.classList.add('hidden');
+            }
+        }
+
+        searchInput.addEventListener('input', (e) => {
             state.searchQuery = e.target.value;
             state.activeSlideIndex = 0;
+            syncClearSearchBtn();
             renderApps({ animateMode: 'quick' });
+        });
+
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            state.searchQuery = '';
+            state.activeSlideIndex = 0;
+            syncClearSearchBtn();
+            renderApps({ animateMode: 'quick' });
+            searchInput.focus();
         });
 
         document.getElementById('filterContainer').addEventListener('click', (e) => {
@@ -1820,19 +2000,20 @@
 
         if (addAppBtn) {
             addAppBtn.addEventListener('click', () => openModal());
-            addAppBtn.classList.add('hidden');
         }
 
         // --------------------------------------------------------
-        // モーダル関連
+        // モーダル関連（URLクリアボタン・ドラッグ選択中の誤クローズ防止対応）
         // --------------------------------------------------------
         const modal = document.getElementById('modal');
-        const modalContainer = modal.querySelector('.modal-container');
+        const modalOverlay = document.getElementById('modalOverlay');
         const modalTitle = document.getElementById('modalTitle');
         const editAppIdInput = document.getElementById('editAppId');
 
         const appNameInput = document.getElementById('appName');
         const appUrlInput = document.getElementById('appUrl');
+        const clearUrlBtn = document.getElementById('clearUrlBtn');
+        const clearUrlTextBtn = document.getElementById('clearUrlTextBtn');
         const appDescInput = document.getElementById('appDesc');
         const appCategoryInput = document.getElementById('appCategory');
         const appSubjectInput = document.getElementById('appSubject');
@@ -1844,6 +2025,23 @@
         const toggleDot = document.getElementById('toggleDot');
         const publicLabelText = document.getElementById('publicLabelText');
         const publicLabelIcon = document.getElementById('publicLabelIcon');
+
+        function syncClearUrlUI() {
+            const hasVal = appUrlInput.value.length > 0;
+            clearUrlBtn.classList.toggle('hidden', !hasVal);
+            clearUrlTextBtn.classList.toggle('hidden', !hasVal);
+        }
+
+        function clearAppUrlField() {
+            appUrlInput.value = '';
+            syncClearUrlUI();
+            appUrlInput.focus();
+            appUrlInput.setSelectionRange(0, 0);
+        }
+
+        appUrlInput.addEventListener('input', syncClearUrlUI);
+        clearUrlBtn.addEventListener('click', clearAppUrlField);
+        clearUrlTextBtn.addEventListener('click', clearAppUrlField);
 
         function updateToggleUI(isPublic) {
             appIsPublicInput.checked = isPublic;
@@ -1878,16 +2076,20 @@
             document.body.classList.add('modal-active');
             if (editId) {
                 const appItem = state.apps.find(a => a.id === editId);
-                if (!appItem) return;
+                if (!appItem) {
+                    document.body.classList.remove('modal-active');
+                    return;
+                }
                 modalTitle.textContent = "アプリを編集";
                 editAppIdInput.value = editId;
-                appNameInput.value = appItem.name;
-                appUrlInput.value = appItem.url;
+                appNameInput.value = appItem.name || '';
+                appUrlInput.value = appItem.url || '';
                 appDescInput.value = appItem.description || '';
                 appCategoryInput.value = appItem.category || 'Tool';
                 appSubjectInput.value = appItem.subject || '';
                 appGradeInput.value = appItem.grade || '';
                 appIconInput.value = appItem.icon || 'fa-cube';
+                if (!appIconInput.value) appIconInput.value = 'fa-cube';
                 selectColor(appItem.color || 'bg-blue-500');
                 const isPublic = appItem.isPublic !== false;
                 updateToggleUI(isPublic);
@@ -1904,32 +2106,41 @@
                 selectColor("bg-blue-500");
                 updateToggleUI(true);
             }
+
+            syncClearUrlUI();
             modal.classList.remove('opacity-0', 'pointer-events-none');
             modal.setAttribute('aria-hidden', 'false');
-            setTimeout(() => {
-                modalContainer.classList.remove('scale-95');
-                modalContainer.classList.add('scale-100');
-                appNameInput.focus();
-            }, 10);
+
+            // 新規追加時のみアプリ名にフォーカス（編集時は勝手にカーソルを奪わない）
+            if (!editId) {
+                requestAnimationFrame(() => appNameInput.focus());
+            }
         }
 
         function closeModal() {
-            modalContainer.classList.remove('scale-100');
-            modalContainer.classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('opacity-0', 'pointer-events-none');
-                modal.setAttribute('aria-hidden', 'true');
-                document.body.classList.remove('modal-active');
-            }, 150);
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('modal-active');
         }
 
         document.querySelector('.modal-close').addEventListener('click', closeModal);
-        document.querySelector('.modal-overlay').addEventListener('click', closeModal);
         document.getElementById('cancelBtn').addEventListener('click', closeModal);
+
+        // テキストドラッグ選択中にモーダル外でマウスを離しても閉じないように制御
+        let overlayPointerDown = false;
+        modalOverlay.addEventListener('pointerdown', (e) => {
+            overlayPointerDown = (e.target === modalOverlay);
+        });
+        modalOverlay.addEventListener('click', (e) => {
+            if (overlayPointerDown && e.target === modalOverlay) {
+                closeModal();
+            }
+            overlayPointerDown = false;
+        });
 
         const colorBtns = document.querySelectorAll('.color-btn');
         colorBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => selectColor(e.target.dataset.color));
+            btn.addEventListener('click', (e) => selectColor(e.currentTarget.dataset.color));
         });
 
         function selectColor(colorClass) {
@@ -1947,14 +2158,22 @@
             const category = appCategoryInput.value;
             const subject = appSubjectInput.value;
             const grade = appGradeInput.value;
-            const icon = appIconInput.value;
-            const color = appColorInput.value;
+            const icon = appIconInput.value || 'fa-cube';
+            const color = appColorInput.value || 'bg-blue-500';
             const isPublic = appIsPublicInput.checked;
             const editId = editAppIdInput.value;
 
-            if (!name) return alert('アプリ名を入力してください');
+            if (!name) {
+                alert('アプリ名を入力してください');
+                appNameInput.focus();
+                return;
+            }
             const validUrl = normalizeUrl(rawUrl);
-            if (!validUrl) return alert('有効なURLを入力してください');
+            if (!validUrl) {
+                alert('有効なURL（http:// または https://）を入力してください');
+                appUrlInput.focus();
+                return;
+            }
 
             const appData = {
                 name,
